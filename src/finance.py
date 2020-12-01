@@ -11,6 +11,8 @@
 # Start typing your code from here
 
 import numpy as np
+import math
+
 
 class Finance(object):
     """ 项目财务分析主类
@@ -25,14 +27,20 @@ class Finance(object):
         power: float, default = 2500.0
             年发电量，单位为“小时”（年等效满发上网小时数）
 
-        static_investment: float, default = 700 000 000.0
-            项目静态总投资，单位为“元”，默认值为 7000元/kW * 10万kW
+        static_investment: float, default = 70000.0
+            项目静态总投资，单位为“万元”，默认值为 7000元/kW * 10万kW
 
         price: float, default = 0.3779
             含税上网电价，单位为“元/度”，默认值为河南燃煤标杆上网电价
 
-        equipment_cost: float, default = 420 000 000.0
-            设备购置费，单位为“元”，默认值 = 静态总投资*60%
+        equipment_cost: float, default = 0.0
+            设备购置费，单位为“万元”，默认值为 0.0，此时在计算时动态给出其值 = 静态总投资*60%
+
+        capital_ratio: float, default = 0.25
+            资本金比例，默认值为公司现值 25 %
+
+        working_capital_ratio: float, default = 0.3
+            流动资金资本金比例，默认值为 30 %
 
         loan_rate: float, default = 0.054
             长期贷款利率，默认值为公司现阶段融资成本 5.4%
@@ -70,62 +78,84 @@ class Finance(object):
         insurance_rate: float, default = 0.0025
             保险费率，默认值为 0.25 %
 
-        material_fee: float, default = 10.0
+        material_fee_quota: float, default = 10.0
             单位材料费，单位为“元/kW”，默认值为 10.0 元/kW
 
-        other_fee_rate: float, default = 40.0
+        other_fee_quota: float, default = 40.0
             其它费用定额，单位为“元/kW”，默认值为 40.0 元/kW
+
+        working_capital_quota: float, default = 30.0
+            （铺底）流动资金定额，单位为“元/kW”，默认值为 30.0 元/kW
 
         withdraw_rate: float, default = 0.1
             盈余公积提取比例（withdrawal ratio of surplus reserve），默认值为 10 %
 
+        build_period: float, default = 1.0
+            建设期，单位为“年”，默认值为 1.0，即 1 年，建设期也会有不满一年的小数存在
+
         operate_period: integer, default = 21
-            经营期（operate period），单位为“年”，默认值为 21 年
+            经营期（operate period），不含建设期，单位为“年”，默认值为 20 年
 
         loan_period: integer, default = 15
             （长期贷款）借款期，单位为“年”，默认值为 15 年
 
         grace_period: integer, default = 1
             （长期贷款）宽限期，单位为“年”，默认值为 1 年
+
+        residual_rate: float, default = 0.05
+            残值率，默认值为 5 %
     
     备注：
     ----------
         1. 第一阶段版本暂按照“等额本金”的方式测算，“等额本息”的模式后续再行补充；
         2. 第一阶段版本仅考虑风电项目的收益测算，光伏项目和其它能源项目的测算逻辑后续再行添加；
-        3. 第一阶段一些细节咱做概化（如造价构成、人员工资构成等），后续根据需要进行展开；
+        3. 第一阶段一些细节暂做概化（如造价构成、人员工资构成等），后续根据需要进行展开；
         
     """
-    
-    def __init__(self, capacity=10.0,power=2500.0,static_investment=700000000.0,price=0.3779,equipment_cost=420000000.0,loan_rate=0.054,current_rate=0.06,rate_discount=1.0,income_tax_rate=0.25,vat_rate=0.13,vat_refund_rate=0.5,workers=10,labor_cost=15.5,in_repair_rate=0.005,out_repair_rate=0.01,warranty=2.0,insurance_rate=0.0025,material_fee=10.0,other_fee_rate=40.0,withdraw_rate=0.1,operate_period=21,loan_period=15,grace_period=1):
+
+    def __init__(self, capacity=10.0, power=2500.0, static_investment=70000.0,
+                 price=0.3779, capital_ratio=0.25, working_capital_ratio=0.3, equipment_cost=0.0,
+                 loan_rate=0.054, current_rate=0.06, rate_discount=1.0, income_tax_rate=0.25,
+                 vat_rate=0.13, vat_refund_rate=0.5, workers=10, labor_cost=15.5, in_repair_rate=0.005,
+                 out_repair_rate=0.01, warranty=2.0, insurance_rate=0.0025, material_fee_quota=10.0,
+                 other_fee_quota=40.0, working_capital_quota=30.0, withdraw_rate=0.1, operate_period=20,
+                 build_period=1.0, loan_period=15, grace_period=1, residual_rate=0.05):
       """
       初始化类变量
       """
-      self.capacity=capacity
-      self.power=power
-      self.static_investment=static_investment
-      self.price=price
-      self.equipment_cost=equipment_cost
-      self.loan_rate=loan_rate
-      self.current_rate=current_rate
-      self.rate_discount=rate_discount
-      self.income_tax_rate=income_tax_rate
-      self.vat_rate=vat_rate
-      self.vat_refund_rate=vat_refund_rate
-      self.workers=workers
-      self.labor_cost=labor_cost
-      self.in_repair_rate=in_repair_rate
-      self.out_repair_rate=out_repair_rate
-      self.warranty=warranty
-      self.insurance_rate=insurance_rate
-      self.material_fee=material_fee
-      self.other_fee_rate=other_fee_rate
-      self.withdraw_rate=withdraw_rate
-      self.operate_period=operate_period
-      self.loan_period=loan_period
-      self.grace_period=grace_period
+      self.capacity = capacity
+      self.power = power
+      self.static_investment = static_investment
+      self.price = price
+      self.capital_ratio = capital_ratio
+      self.working_capital_ratio = working_capital_ratio
+      if equipment_cost == 0.0:
+          self.equipment_cost = static_investment * 0.6
+      else:
+          self.equipment_cost = equipment_cost
+      self.loan_rate = loan_rate
+      self.current_rate = current_rate
+      self.rate_discount = rate_discount
+      self.income_tax_rate = income_tax_rate
+      self.vat_rate = vat_rate
+      self.vat_refund_rate = vat_refund_rate
+      self.workers = workers
+      self.labor_cost = labor_cost
+      self.in_repair_rate = in_repair_rate
+      self.out_repair_rate = out_repair_rate
+      self.warranty = warranty
+      self.insurance_rate = insurance_rate
+      self.material_fee_quota = material_fee_quota
+      self.other_fee_quota = other_fee_quota
+      self.working_capital_quota = working_capital_quota
+      self.withdraw_rate = withdraw_rate
+      self.build_period = build_period
+      self.operate_period = operate_period
+      self.loan_period = loan_period
+      self.grace_period = grace_period
+      self.residual_rate = residual_rate
 
-
-    def com_finance(self, mode=False,file=''):
+    def com_finance(self, mode=False, file=''):
       """
       计算类实例所抽象出的项目（边界）的财务现金流和资本金现金流序列。
 
@@ -146,10 +176,90 @@ class Finance(object):
       备注：
       ----------
         1. 本方法是类对象的核心算法，会涉及到较大量的有效中间计算结果，需梳理好临时变量，以便能写入excel表；
-        2. 注意临时变量的分类和初始化工作。
+        2. 注意临时变量的分类和初始化工作；
+        3. 第一阶段默认建设期为 1 年，运营期（含建设期）为 21 年，后续再行扩充可变建设期和运营期。
       """
-      pass
 
+      # 重要中间变量（数组）
+      ## 投资计划与资金筹措
+      build_cells = math.ceil(self.build_period)  # 建设期列表长度（整年数）
+      row_cells = build_cells + 2  # 数组长度（总计、建设期、首年运行）
+      total_investment = np.zeros(row_cells)  # 总投资
+      construct_investment = np.zeros(row_cells)  # 建设投资
+      construct_interest = np.zeros(row_cells)  # 建设期利息
+      working_capital = np.zeros(row_cells)  # 流动资金
+      financing = np.zeros(row_cells)  # 资金筹措
+      capital = np.zeros(row_cells)  # 资本金
+      loan = np.zeros(row_cells)  # 贷款
+      long_loan = np.zeros(row_cells)  # 长期贷款
+      working_loan = np.zeros(row_cells)  # 流动资金贷款
+
+      ## 总成本费用估算
+      row_cells = self.operate_period + build_cells + 1  # 数组长度（总计、运营期含建设期）
+      depreciation = np.zeros(row_cells)  # 折旧费
+      maintenance = np.zeros(row_cells)  # 维修费
+      wage = np.zeros(row_cells)  # 工资和福利
+      insurance = np.zeros(row_cells)  # 保险费
+      material = np.zeros(row_cells)  # 材料费
+      amortization = np.zeros(row_cells)  # 摊销费
+      interest = np.zeros(row_cells)  # 利息支持
+      other_expense = np.zeros(row_cells)  # 其它费用支出
+      fix_cost = np.zeros(row_cells)  # 固定成本
+      var_cost = np.zeros(row_cells)  # 可变成本
+      total_cost = np.zeros(row_cells)  # 总成本费用
+      operate_cost = np.zeros(row_cells)  # 经营成本
+
+      # 临时辅助性变量
+      fix_assets = total_investment[1] - \
+          self.equipment_cost/(1+self.vat_rate)*self.vat_rate  # 固定资产数值
+
+      # 返回结果变量（数组）
+      finance_flow = np.zeros(row_cells)
+      capital_flow = np.zeros(row_cells)
+
+      # 计算各中间变量值
+      ## 投资计划与资金筹措（暂按建设期为 1 年的标准考虑
+      construct_investment[1] = self.static_investment  # 建设期（首年）投资
+      construct_interest[1] = self.static_investment * self.loan_rate * \
+          (1 - self.capital_ratio) / \
+          (2 - self.loan_rate * (1 - self.capital_ratio)) # 建设期（首年）利息
+      working_capital[2] = self.capacity * self.working_capital_quota  # 运营期首年铺底流动资金
+      construct_investment[0] = np.sum(construct_investment)  # 建设投资总额
+      construct_interest[0] = np.sum(construct_interest)  # 建设利息总额
+      working_capital[0] = np.sum(working_capital)  # 流动资金总额
+      total_investment = construct_investment + construct_interest + working_capital  # 总投资序列（含建设期和运营首年）
+
+      capital[1] = total_investment[1] * self.capital_ratio  # 建设期（首年）资本金
+      capital[2] = total_investment[2] * self.working_capital_ratio  # 运营首年流动资金资本金
+      long_loan[1] = total_investment[1] - capital[1]  # 建设期（首年）长期贷款
+      working_loan[2] = total_investment[2] - capital[2]  # 运营首年流动资金贷款
+      long_loan[0] = np.sum(long_loan)  # 长期贷款总额
+      working_loan[0] = np.sum(working_loan)  # 流动资金贷款总额
+      loan = long_loan + working_loan  # 总贷款序列（含建设期和运营首年）
+      finance = capital + loan  # 总筹款序列（含建设期和运营首年）
+
+      ## 总成本费用估算
+      depreciation[build_cells + 1:] = fix_assets * (1 - self.residual_rate) / self.operate_period  # 折旧费序列
+      maintenance[build_cells + 1 : build_cells + 1 + self.warranty] = fix_assets * self.in_repair_rate  # 质保期内维修费序列
+      maintenance[build_cells + 1 + self.warranty :] = fix_assets * self.out_repair_rate  # 质保期外维修费序列
+      wage[build_cells + 1 :] = self.workers * self.labor_cost  # 工资和福利序列
+      insurance[build_cells + 1 :] = fix_assets * self.insurance_rate  # 保险费序列
+      material[build_cells + 1 :] = self.capacity * self.material_fee_quota  # 材料费序列
+      other_expense[build_cells + 1 :] = self.capacity * self.other_fee_quota  # 其它费用序列
+      depreciation[0] = np.sum(depreciation)  # 总折旧费
+      maintenance[0] = np.sum(maintenance)  # 总维修费
+      wage[0] = np.sum(wage)  # 总工资和福利费
+      insurance[0] = np.sum(insurance)  # 总保险费
+      material[0] = np.sum(material)  # 总材料费
+      other_expense[0] = np.sum(other_expense)  # 总其它费
+      amortization[0] = np.sum(amortization)  # 总摊销费
+      
+      var_cost = material  # 可变成本序列
+      operate_cost = maintenance + wage + insurance + material + other_expense  # 运营成本序列
+      
+      
+      # 返回结果数组（元组）
+      return finance_flow, capital_flow
 
     @staticmethod
     def com_payback(cash_array):
@@ -175,7 +285,6 @@ class Finance(object):
       """
       pass
 
-
     @staticmethod
     def com_irr(cash_array):
       """
@@ -199,9 +308,8 @@ class Finance(object):
       """
       pass
 
-
     @staticmethod
-    def com_present(cash_array,discount_rate=0.05):
+    def com_present(cash_array, discount_rate=0.05):
       """
       根据所给的现金流量数组和折现率，计算对应的项目净现值。
 
@@ -227,9 +335,8 @@ class Finance(object):
       """
       pass
 
-
     @staticmethod
-    def com_lcoe(cost_array,total_power,discount_rate):
+    def com_lcoe(cost_array, total_power, discount_rate):
       """
       根据所给的总费用数组、总发电量和折现率，计算对应的LCOE（平准化度电成本）。
 
@@ -261,6 +368,16 @@ class Finance(object):
 
 if __name__ == "__main__":
     finance = Finance()
-    finance.capacity=10.0
-    finance.com_finance()
-    print(finance.capacity)
+    finance.capacity = 10.0  # 风电场容量，万 kW
+    finance.power = 2500.0  # 风电场年发电量，小时
+    finance.price = 0.3779  # 上网电价（含税），元/度
+    finance.static_investment = 6800 * 100000  # 静态总投资，元
+    finance.capital_ratio = 0.25  # 资本金比例
+    finance.loan_rate = 0.054  # 贷款利率
+    # 其它参数采用默认值
+
+    # 计算项目的财务现金流和资本金现金流
+    finance_flow, capital_flow = finance.com_finance()
+
+    # 打印结果
+    print(finance_flow, capital_flow)
