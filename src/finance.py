@@ -183,7 +183,7 @@ class Finance(object):
       # 重要中间变量（数组）
       ## 投资计划与资金筹措
       build_cells = math.ceil(self.build_period)  # 建设期列表长度（整年数）
-      row_cells = build_cells + 2  # 数组长度（总计、建设期、首年运行）
+      row_cells = build_cells + 2  # 数组长度（建设期+总计+首年运行）
       total_investment = np.zeros(row_cells)  # 总投资
       construct_investment = np.zeros(row_cells)  # 建设投资
       construct_interest = np.zeros(row_cells)  # 建设期利息
@@ -195,7 +195,7 @@ class Finance(object):
       working_loan = np.zeros(row_cells)  # 流动资金贷款
 
       ## 总成本费用估算
-      row_cells = self.operate_period + build_cells + 1  # 数组长度（总计、运营期含建设期）
+      row_cells = self.operate_period + build_cells + 1  # 数组长度（运营期+建设期+总计）
       depreciation = np.zeros(row_cells)  # 折旧费
       maintenance = np.zeros(row_cells)  # 维修费
       wage = np.zeros(row_cells)  # 工资和福利
@@ -208,6 +208,16 @@ class Finance(object):
       var_cost = np.zeros(row_cells)  # 可变成本
       total_cost = np.zeros(row_cells)  # 总成本费用
       operate_cost = np.zeros(row_cells)  # 经营成本
+      
+      # 借款还本付息计划
+      long_loan=np.zeros(row_cells)  # 长期贷款
+      long_opening_balance = np.zeros(row_cells)  # 长贷期初余额
+      long_debt_service = np.zeros(row_cells)  # 当期还本付息
+      long_pay_principal = np.zeros(row_cells)  # 当期还本
+      long_pay_interest = np.zeros(row_cells)  # 当期付息
+      long_ending_balance = np.zeros(row_cells)  # 长贷期末余额
+      short_loan = np.zeros(row_cells)  # 流动资金（短期）贷款
+       
 
       # 临时辅助性变量
       fix_assets = total_investment[1] - \
