@@ -275,13 +275,19 @@ class Finance(object):
       # 借款还本付息计划
       long_pay_principal[build_cells+1:build_cells +
                          self.loan_period] = loan[1]/self.loan_period  # 采用等额本金的方法还款
-    
-			long_opening_balance[build_cells + 1] = loan[1]
-			long_opening_balance[i+1]=long_opening_balance[i]-long_pay_principal[i]
-
-			long_ending_balance[build_cells:build_cells+self.loan_period-1]=long_opening_balance[build_cells + 1:build_cells+self.loan_period]
-      long_pay_interest=long_opening_balance*self.loan_rate*self.discount_rate
+      long_opening_balance[build_cells + 1] = loan[1]  # 运营首年期初贷款余额
+      long_opening_balance[i+1] = long_opening_balance[i]-long_pay_principal[i]  # 期初贷款余额序列
+      long_ending_balance[build_cells:build_cells+self.loan_period -
+                          1] = long_opening_balance[build_cells+1:build_cells+self.loan_period-1]  # 期末贷款余额序列
+      long_pay_interest = long_opening_balance*self.loan_rate*self.rate_discount  # 应付利息序列
+      long_pay_interest[0]=np.sum(long_pay_interest)  # 付息总额
+      long_pay_principal[0]=np.sum(long_pay_principal)  # 还本总额
+      long_debt_service=long_pay_principal+long_pay_interest  # 还本付息序列
       
+      short_loan[build_cells+1:]=working_loan[2]  # 流动资金贷款序列
+      short_pay_interest=short_loan*self.current_rate  # 应付利息序列
+      short_pay_principal=short_loan  # 应还本金序列
+      short_debt_service=short_pay_principal+short_pay_interest  #  还本付息序列      
       # 返回结果数组（元组）
       return finance_flow, capital_flow
 
