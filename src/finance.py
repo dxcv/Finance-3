@@ -216,8 +216,14 @@ class Finance(object):
       long_pay_principal = np.zeros(row_cells)  # 当期还本
       long_pay_interest = np.zeros(row_cells)  # 当期付息
       long_ending_balance = np.zeros(row_cells)  # 长贷期末余额
+      
       short_loan = np.zeros(row_cells)  # 流动资金（短期）贷款
-       
+      short_opening_balance=np.zeros(row_cells)  # 流贷期初余额
+      short_debt_service=np.zeros(row_cells)  # 当期还本付息
+      short_pay_principal=np.zeros(row_cells)  # 当期还本
+      short_pay_interest=np.zeros(row_cells)  # 当期付息 
+      short_ending_balance=np.zeros(row_cells)  # 流贷期末余额
+      
 
       # 临时辅助性变量
       fix_assets = total_investment[1] - \
@@ -263,11 +269,15 @@ class Finance(object):
       material[0] = np.sum(material)  # 总材料费
       other_expense[0] = np.sum(other_expense)  # 总其它费
       amortization[0] = np.sum(amortization)  # 总摊销费
-      
       var_cost = material  # 可变成本序列
       operate_cost = maintenance + wage + insurance + material + other_expense  # 运营成本序列
       
-      
+      # 借款还本付息计划
+      long_pay_principal[build_cells+1:build_cells +
+                         self.loan_period] = loan[1]/self.loan_period  # 采用等额本金的方法还款
+    
+
+
       # 返回结果数组（元组）
       return finance_flow, capital_flow
 
