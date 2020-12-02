@@ -276,8 +276,12 @@ class Finance(object):
       long_pay_principal[build_cells+1:build_cells +
                          self.loan_period] = loan[1]/self.loan_period  # 采用等额本金的方法还款
     
+			long_opening_balance[build_cells + 1] = loan[1]
+			long_opening_balance[i+1]=long_opening_balance[i]-long_pay_principal[i]
 
-
+			long_ending_balance[build_cells:build_cells+self.loan_period-1]=long_opening_balance[build_cells + 1:build_cells+self.loan_period]
+      long_pay_interest=long_opening_balance*self.loan_rate*self.discount_rate
+      
       # 返回结果数组（元组）
       return finance_flow, capital_flow
 
