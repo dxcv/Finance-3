@@ -251,6 +251,10 @@ class Finance(object):
       
       # 财务现金流量
       inflow_cash = np.zeros(row_cells)  # 现金流入序列  “万元”
+      subside=np.zeros(row_cells)  # 补贴收入序列  “万元”
+      recover_fix_asset=np.zeros(row_cells)  # 回收固定资产余值序列  “万元”
+      recover_working_capital=np.zeros(row_cells)  # 回收流动资金序列  “万元”
+      outflow_cash=np.zeros(row_cells)  # 现金流出序列  “万元”
       
 
       # 临时辅助性变量
@@ -328,7 +332,7 @@ class Finance(object):
         input_tax_balance[build_cells + 1 + i] = vat_input_deduction - i * vat_output_tax  # 进项税抵扣余额序列
         if input_tax_balance[build_cells + 1 + i] <= 0:
           build_tax[build_cells + 1 + i] = vat_output_tax * self.build_tax_rate  # 城建税序列（设备进项税抵扣完后）
-          edu_surcharge[build + 1 + i] = vat_output_tax * self.edu_surcharge_rate  # 教育费及附加序列
+          edu_surcharge[build_cells + 1 + i] = vat_output_tax * self.edu_surcharge_rate  # 教育费及附加序列
         elif input_tax_balance[build_cells + 1 + i] > 0 and vat_input_deduction - (i + 1) * vat_output_tax <= 0:
           build_tax[build_cells + 1 + i] = (vat_output_tax - input_tax_balance[build_cells + 1 + i]) * self.build_tax_rate  # 城建税序列（设备进项税即将不足抵扣）
           edu_surcharge[build_cells + 1 + i] = (vat_output_tax - input_tax_balance[build_cells + 1 + i]) * self.edu_surcharge_rate  # 教育费及附加序列
@@ -362,7 +366,14 @@ class Finance(object):
       provident_fund = net_profit * self.withdraw_rate  # 法定盈余公积金序列
       distribute_profit = net_profit - provident_fund  # 可供投资者分配的利润序列
       ebit = profit + long_pay_interest + short_pay_interest  # 息税前利润序列
-        
+
+      # 项目投资现金流量
+      subside=vat_return+output_tax  # 补贴收入序列
+      recover_fix_asset[build_cells+self.operate_period]=fix_assets*self.residual_rate  # 回收固定资产余值序列
+      recover_working_capital[build_cells+self.operate_period]=working_capital[2]  # 回收流动资金序列
+      recover_fix_asset[0]=np.sum(recover_fix_asset)  # 回收固定资产总计
+      recover_working_capital[0]=np.sum(recover_working_capital)  # 回收流动资金总计
+      inflow_cash=income+subside+recover_fix_asset+recover_working_capital  # 现金流入序列 
       
       # 返回结果数组（元组）
       return finance_flow, capital_flow
