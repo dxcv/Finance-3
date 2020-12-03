@@ -60,6 +60,12 @@ class Finance(object):
         vat_refund_rate: float, default = 0.5
             增值税退税比率（vat refund rate），默认值为 50 %
 
+        build_tax_rate: float, default = 0.05
+            城建税税率，默认值为 5 %
+
+        edu_surcharge_rate: float, default = 0.05
+            教育费及附加费率，默认值为 5 %  
+
         workers: integer, default = 10
             员工人数，默认值为 10 人（1万kW装机匹配1人）
 
@@ -115,8 +121,8 @@ class Finance(object):
 
     def __init__(self, capacity=10.0, power=2500.0, static_investment=70000.0,
                  price=0.3779, capital_ratio=0.25, working_capital_ratio=0.3, equipment_cost=0.0,
-                 loan_rate=0.054, current_rate=0.06, rate_discount=1.0, income_tax_rate=0.25,
-                 vat_rate=0.13, vat_refund_rate=0.5, workers=10, labor_cost=15.5, in_repair_rate=0.005,
+                 loan_rate=0.054, current_rate=0.06, rate_discount=1.0, income_tax_rate=0.25, build_tax_rate=0.05,
+                 vat_rate=0.13, vat_refund_rate=0.5, edu_surcharge_rate=0.05,workers=10, labor_cost=15.5, in_repair_rate=0.005,
                  out_repair_rate=0.01, warranty=2.0, insurance_rate=0.0025, material_fee_quota=10.0,
                  other_fee_quota=40.0, working_capital_quota=30.0, withdraw_rate=0.1, operate_period=20,
                  build_period=1.0, loan_period=15, grace_period=1, residual_rate=0.05):
@@ -139,6 +145,8 @@ class Finance(object):
       self.income_tax_rate = income_tax_rate
       self.vat_rate = vat_rate
       self.vat_refund_rate = vat_refund_rate
+      self.build_tax_rate = build_tax_rate
+      self.edu_surcharge_rate = edu_surcharge_rate
       self.workers = workers
       self.labor_cost = labor_cost
       self.in_repair_rate = in_repair_rate
@@ -183,52 +191,73 @@ class Finance(object):
       # 重要中间变量（数组）
       ## 投资计划与资金筹措
       build_cells = math.ceil(self.build_period)  # 建设期列表长度（整年数）
-      row_cells = build_cells + 2  # 数组长度（建设期+总计+首年运行）
-      total_investment = np.zeros(row_cells)  # 总投资
-      construct_investment = np.zeros(row_cells)  # 建设投资
-      construct_interest = np.zeros(row_cells)  # 建设期利息
-      working_capital = np.zeros(row_cells)  # 流动资金
-      financing = np.zeros(row_cells)  # 资金筹措
-      capital = np.zeros(row_cells)  # 资本金
-      loan = np.zeros(row_cells)  # 贷款
-      long_loan = np.zeros(row_cells)  # 长期贷款
-      working_loan = np.zeros(row_cells)  # 流动资金贷款
+      row_cells = build_cells + 2  # 序列长度（建设期+总计+首年运行）
+      total_investment = np.zeros(row_cells)  # 总投资序列  “万元”
+      construct_investment = np.zeros(row_cells)  # 建设投资序列  “万元”
+      construct_interest = np.zeros(row_cells)  # 建设期利息序列  “万元”
+      working_capital = np.zeros(row_cells)  # 流动资金序列  “万元”
+      financing = np.zeros(row_cells)  # 资金筹措序列  “万元”
+      capital = np.zeros(row_cells)  # 资本金序列  “万元”
+      loan = np.zeros(row_cells)  # 贷款序列  “万元”
+      long_loan = np.zeros(row_cells)  # 长期贷款序列  “万元”
+      working_loan = np.zeros(row_cells)  # 流动资金贷款序列  “万元”
 
       ## 总成本费用估算
-      row_cells = self.operate_period + build_cells + 1  # 数组长度（运营期+建设期+总计）
-      depreciation = np.zeros(row_cells)  # 折旧费
-      maintenance = np.zeros(row_cells)  # 维修费
-      wage = np.zeros(row_cells)  # 工资和福利
-      insurance = np.zeros(row_cells)  # 保险费
-      material = np.zeros(row_cells)  # 材料费
-      amortization = np.zeros(row_cells)  # 摊销费
-      interest = np.zeros(row_cells)  # 利息支持
-      other_expense = np.zeros(row_cells)  # 其它费用支出
-      fix_cost = np.zeros(row_cells)  # 固定成本
-      var_cost = np.zeros(row_cells)  # 可变成本
-      total_cost = np.zeros(row_cells)  # 总成本费用
-      operate_cost = np.zeros(row_cells)  # 经营成本
+      row_cells = self.operate_period + build_cells + 1  # 序列长度（运营期+建设期+总计）
+      depreciation = np.zeros(row_cells)  # 折旧费序列  “万元”
+      maintenance = np.zeros(row_cells)  # 维修费序列  “万元”
+      wage = np.zeros(row_cells)  # 工资和福利序列  “万元”
+      insurance = np.zeros(row_cells)  # 保险费序列  “万元”
+      material = np.zeros(row_cells)  # 材料费序列  “万元”
+      amortization = np.zeros(row_cells)  # 摊销费序列  “万元”
+      interest = np.zeros(row_cells)  # 利息支出序列  “万元”
+      other_expense = np.zeros(row_cells)  # 其它费用支出序列  “万元”
+      fix_cost = np.zeros(row_cells)  # 固定成本序列  “万元”
+      var_cost = np.zeros(row_cells)  # 可变成本序列  “万元”
+      total_cost = np.zeros(row_cells)  # 总成本费用序列  “万元”
+      operate_cost = np.zeros(row_cells)  # 经营成本序列  “万元”
       
       # 借款还本付息计划
-      long_loan=np.zeros(row_cells)  # 长期贷款
-      long_opening_balance = np.zeros(row_cells)  # 长贷期初余额
-      long_debt_service = np.zeros(row_cells)  # 当期还本付息
-      long_pay_principal = np.zeros(row_cells)  # 当期还本
-      long_pay_interest = np.zeros(row_cells)  # 当期付息
-      long_ending_balance = np.zeros(row_cells)  # 长贷期末余额
+      long_loan=np.zeros(row_cells)  # 长期贷款序列  “万元”
+      long_opening_balance = np.zeros(row_cells)  # 长贷期初余额序列 “万元”
+      long_debt_service = np.zeros(row_cells)  # 当期还本付息序列  “万元”
+      long_pay_principal = np.zeros(row_cells)  # 当期还本序列  “万元”
+      long_pay_interest = np.zeros(row_cells)  # 当期付息序列  “万元”
+      long_ending_balance = np.zeros(row_cells)  # 长贷期末余额序列  “万元”
       
-      short_loan = np.zeros(row_cells)  # 流动资金（短期）贷款
-      short_opening_balance=np.zeros(row_cells)  # 流贷期初余额
-      short_debt_service=np.zeros(row_cells)  # 当期还本付息
-      short_pay_principal=np.zeros(row_cells)  # 当期还本
-      short_pay_interest=np.zeros(row_cells)  # 当期付息 
-      short_ending_balance=np.zeros(row_cells)  # 流贷期末余额
+      short_loan = np.zeros(row_cells)  # 流动资金（短期）贷款序列  “万元”
+      short_opening_balance=np.zeros(row_cells)  # 流贷期初余额序列  “万元”
+      short_debt_service=np.zeros(row_cells)  # 当期还本付息序列  “万元”
+      short_pay_principal=np.zeros(row_cells)  # 当期还本序列  “万元”
+      short_pay_interest=np.zeros(row_cells)  # 当期付息序列  “万元”
+      short_ending_balance=np.zeros(row_cells)  # 流贷期末余额序列  “万元”
+      
+      # 利润和利润分配
+      income = np.zeros(row_cells)  # 营业收入序列  “万元”
+      input_tax_balance = np.zeros(row_cells)  # 进项税抵扣余额序列  “万元”
+      operate_tax = np.zeros(row_cells)  # 营业税金及附加序列  “万元”
+      build_tax = np.zeros(row_cells)  # 城建税序列  “万元”
+      edu_surcharge = np.zeros(row_cells)  # 教育费附加序列  “万元”
+      vat_return = np.zeros(row_cells)  # 增值税即征即退  “万元”
+      output_tax=np.zeros(row_cells)  # 增值税转型（销项税额）序列  “万元”
+      profit = np.zeros(row_cells)  # 利润总额序列  “万元”
+      offset_loss = np.zeros(row_cells)  # 弥补以前年度亏损序列  “万元”
+      tax_income = np.zeros(row_cells)  # 应纳税所得额序列  “万元”
+      income_tax = np.zeros(row_cells)  # 所得税序列  “万元”
+      net_profit = np.zeros(row_cells)  # 净利润序列  “万元”
+      provident_fund = np.zeros(row_cells)  # 法定盈余公积金序列  “万元”
+      distribute_profit = np.zeros(row_cells)  # 可供投资者分配的利润序列  “万元”
+      ebit = np.zeros(row_cells)  # 息税前利润（profit before interest and tax)序列  “万元”
+      
+      # 财务现金流量
+      inflow_cash = np.zeros(row_cells)  # 现金流入序列  “万元”
       
 
       # 临时辅助性变量
-      fix_assets = total_investment[1] - \
-          self.equipment_cost/(1+self.vat_rate)*self.vat_rate  # 固定资产数值
-
+      fix_assets = total_investment[1] - self.equipment_cost/(1+self.vat_rate)*self.vat_rate  # 固定资产价值  “万元”
+      vat_input_deduction = fix_assets / (1 + self.vat_rate) * self.vat_rate  # 增值税进项税抵扣额  “万元”
+      vat_output_tax = self.power * self.price * self.vat_rate / (1 + self.vat_rate)  # 增值税销项税  “万元”
+      
       # 返回结果变量（数组）
       finance_flow = np.zeros(row_cells)
       capital_flow = np.zeros(row_cells)
@@ -237,8 +266,8 @@ class Finance(object):
       ## 投资计划与资金筹措（暂按建设期为 1 年的标准考虑
       construct_investment[1] = self.static_investment  # 建设期（首年）投资
       construct_interest[1] = self.static_investment * self.loan_rate * \
-          (1 - self.capital_ratio) / \
-          (2 - self.loan_rate * (1 - self.capital_ratio)) # 建设期（首年）利息
+          (1 - self.capital_ratio) * self.rate_discount/ \
+          (2 - self.loan_rate * self.rate_discount * (1 - self.capital_ratio)) # 建设期（首年）利息
       working_capital[2] = self.capacity * self.working_capital_quota  # 运营期首年铺底流动资金
       construct_investment[0] = np.sum(construct_investment)  # 建设投资总额
       construct_interest[0] = np.sum(construct_interest)  # 建设利息总额
@@ -273,21 +302,68 @@ class Finance(object):
       operate_cost = maintenance + wage + insurance + material + other_expense  # 运营成本序列
       
       # 借款还本付息计划
-      long_pay_principal[build_cells+1:build_cells +
-                         self.loan_period] = loan[1]/self.loan_period  # 采用等额本金的方法还款
-      long_opening_balance[build_cells + 1] = loan[1]  # 运营首年期初贷款余额
-      long_opening_balance[i+1] = long_opening_balance[i]-long_pay_principal[i]  # 期初贷款余额序列
-      long_ending_balance[build_cells:build_cells+self.loan_period -
-                          1] = long_opening_balance[build_cells+1:build_cells+self.loan_period-1]  # 期末贷款余额序列
-      long_pay_interest = long_opening_balance*self.loan_rate*self.rate_discount  # 应付利息序列
-      long_pay_interest[0]=np.sum(long_pay_interest)  # 付息总额
-      long_pay_principal[0]=np.sum(long_pay_principal)  # 还本总额
-      long_debt_service=long_pay_principal+long_pay_interest  # 还本付息序列
+      long_pay_principal[build_cells + 1 : build_cells + self.loan_period] = loan[1] / self.loan_period  # 采用等额本金的方法还款
+      for i in range(self.loan_period):
+        long_opening_balance[build_cells + i + 1] = loan[1] - i * long_pay_principal[build_cells + i]  # 期初贷款余额序列
+      long_ending_balance[build_cells: build_cells + self.loan_period - 1] = \
+          long_opening_balance[build_cells + 1 : build_cells + self.loan_period - 1]  # 期末贷款余额序列
+      long_pay_interest = long_opening_balance * self.loan_rate * self.rate_discount  # 应付利息序列
+      long_pay_interest[0] = np.sum(long_pay_interest)  # 付息总额
+      long_pay_principal[0] = np.sum(long_pay_principal)  # 还本总额
+      long_debt_service = long_pay_principal + long_pay_interest  # 还本付息序列
+
+      short_loan[build_cells + 1 :] = working_loan[2]  # 流动资金贷款序列
+      short_pay_interest = short_loan * self.current_rate  # 应付利息序列
+      short_pay_principal = short_loan  # 应还本金序列
+      short_debt_service = short_pay_principal + short_pay_interest  # 还本付息序列
       
-      short_loan[build_cells+1:]=working_loan[2]  # 流动资金贷款序列
-      short_pay_interest=short_loan*self.current_rate  # 应付利息序列
-      short_pay_principal=short_loan  # 应还本金序列
-      short_debt_service=short_pay_principal+short_pay_interest  #  还本付息序列      
+      # 补漏计算总成本费用
+      interest = long_pay_interest + short_pay_interest  # 利息支出
+      fix_cost = depreciation + maintenance + wage + insurance + interest + other_expense  # 固定成本
+      total_cost = depreciation + maintenance + wage + insurance + material + amortization + interest + other_expense  # 总成本费用
+
+      # 利润和利润分配
+      income[build_cells + 1 :] = self.power * self.price / (1 + self.vat_rate)  # 运营期营业收入序列
+      for i in range(self.operate_period):
+        input_tax_balance[build_cells + 1 + i] = vat_input_deduction - i * vat_output_tax  # 进项税抵扣余额序列
+        if input_tax_balance[build_cells + 1 + i] <= 0:
+          build_tax[build_cells + 1 + i] = vat_output_tax * self.build_tax_rate  # 城建税序列（设备进项税抵扣完后）
+          edu_surcharge[build + 1 + i] = vat_output_tax * self.edu_surcharge_rate  # 教育费及附加序列
+        elif input_tax_balance[build_cells + 1 + i] > 0 and vat_input_deduction - (i + 1) * vat_output_tax <= 0:
+          build_tax[build_cells + 1 + i] = (vat_output_tax - input_tax_balance[build_cells + 1 + i]) * self.build_tax_rate  # 城建税序列（设备进项税即将不足抵扣）
+          edu_surcharge[build_cells + 1 + i] = (vat_output_tax - input_tax_balance[build_cells + 1 + i]) * self.edu_surcharge_rate  # 教育费及附加序列
+        else:
+          build_tax[build_cells + 1 + i] = 0  # 城建税序列（设备进项税未抵扣完）
+          edu_surcharge[build_cells + 1 + i] = 0  # 教育费及附加序列
+      build_tax[0] = np.sum(build_tax)  # 城建税总计
+      edu_surcharge[0] = np.sum(edu_surcharge)  # 教育费及附加总计
+      operate_tax = build_tax + edu_surcharge  # 营业税金及附加
+      vat_return = build_tax * self.vat_refund_rate / self.build_tax_rate  # 增值税即征即退序列
+      for i in range(build_cells + 1, self.operate_period):  # 计算销项税序列
+        if input_tax_balance[i] < 0:
+          output_tax[i] = 0
+        elif input_tax_balance[i] >= vat_output_tax:
+          output_tax[i] = vat_output_tax
+        else:
+          output_tax[i] = input_tax_balance[i]          
+      profit = income - operate_tax - total_cost + vat_return  # 利润总额序列
+      tax_income = profit - offset_loss  # 应纳税所得额序列
+      for i in range(self.operate_period):  # 所得税序列计算
+        if i < 3:
+          income_tax[build_cells + 1 + i] = 0  # “三免”
+        elif tax_income[build_cells + 1 + i] <= 0:
+          income_tax[build_cells + 1 + i] = 0  # 应税所得为负值
+        elif i < 6:
+          income_tax[build_cells + 1 + i] = tax_income[build_cells + 1 + i] * self.income_tax_rate / 2  # “三减半”
+        else:
+          income_tax[build_cells + 1 + i] = tax_income[build_cells + 1 + i] * self.income_tax_rate  # 正常所得税序列
+      income_tax[0]=np.sum(income_tax)  # 所得税总计
+      net_profit = profit - income_tax  # 净利润序列
+      provident_fund = net_profit * self.withdraw_rate  # 法定盈余公积金序列
+      distribute_profit = net_profit - provident_fund  # 可供投资者分配的利润序列
+      ebit = profit + long_pay_interest + short_pay_interest  # 息税前利润序列
+        
+      
       # 返回结果数组（元组）
       return finance_flow, capital_flow
 
