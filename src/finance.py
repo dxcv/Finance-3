@@ -512,7 +512,7 @@ if __name__ == "__main__":
     finance.loan_rate = 0.054  # 贷款利率
     # 其它参数采用默认值
 
-    # 计算项目的财务现金流和资本金现金流
+    # 计算项目的现金流和内部收益率
     pre_pro_netflow, after_pro_netflow, cap_netflow = finance.com_finance() # 计算各现金流
     pre_pro_irr = finance.com_irr(pre_pro_netflow)  # 项目税前 IRR
     after_pro_irr = finance.com_irr(after_pro_netflow)  # 项目税后 IRR
