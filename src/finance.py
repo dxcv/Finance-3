@@ -167,7 +167,7 @@ class Finance(object):
       self.grace_period = grace_period
       self.residual_rate = residual_rate
 
-    def com_finance(self, mode=False, file=''):
+    def com_finance(self, mode=False):
       """
       计算类实例所抽象出的项目（边界）的财务现金流和资本金现金流序列。
 
@@ -263,6 +263,12 @@ class Finance(object):
       recover_cap_working = np.zeros(row_cells)  # 回收流动资金（资本金）序列  “万元”
       cap_outflow = np.zeros(row_cells)  # 现金流出（资本金）序列  “万元”
       cap_netflow = np.zeros(row_cells)  # 资本金净现金流量  “万元”
+      ################################################################################
+      ## 处理 mode 为 TRUE 情况（即需要计算表格输出）
+      if mode == True:
+        investment_finance = [total_investment[: build_cells + 2], build_investment[: build_cells + 2], build_interest[: build_cells + 2], working_capital[: build_cells + 2],
+                              finance[: build_cells + 2], capital[: build_cells + 2], debt[: build_cells + 2], long_loan[: build_cells + 2], working_loan[: build_cells + 2]]  # 项目总投资使用计划与资金筹措
+        com_result=[investment_finance]  # 计算表格结果列表（项目总投资使用计划与资金筹措表，总成本费用估算表，借款还本付息计划表，利润与利润分配表，项目现金流量表，项目资本金流量表等）
       ################################################################################
       ################################################################################
       ## 投资计划与资金筹措（暂按建设期为 1 年的标准考虑）
@@ -393,7 +399,10 @@ class Finance(object):
       ################################################################################
       ################################################################################
       # 返回结果数组（元组）（总计值不再列入返回的流量表）
-      return pre_pro_netflow[1:], after_pro_netflow[1:], cap_netflow[1:]
+      if mode:
+        return pre_pro_netflow[1:], after_pro_netflow[1:], cap_netflow[1:], com_result
+      else:
+        return pre_pro_netflow[1:], after_pro_netflow[1:], cap_netflow[1:]
 
     @staticmethod
     def com_payback(cash_array):
