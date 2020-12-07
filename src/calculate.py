@@ -11,7 +11,10 @@
 # Start typing your code from here
 # 计算各项财务边界面
 
+import numpy as np
 from finance import Finance
+from tools import write_excel
+
 
 def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
     """
@@ -45,7 +48,57 @@ def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
         2. 第一阶段暂时不考虑输入数据格式和范围有效性检查，默认其格式和范围都是合理的。
     
     """
-    pass
+    flow = finance.com_finance()  # 现金流元组（项目税前净现金流，项目税后净现金流，资本金现金流）
+    com_pro_irr = Finance.com_irr(flow[1])  # 计算所得项目税后 IRR
+    com_cap_irr = Finance.com_irr(flow[2])  # 计算所得资本金 IRR（税后）
+    delta_price = 0.0  # 电价递增幅度，单位为“元”，将根据具体模式和具体计算结果确定增长方向
+
+    if mode == 0:  # 要求资本金 IRR 达标
+        if com_cap_irr < cap_irr:  # 低于标准 IRR
+            delta_price = 0.001 
+        else:
+            delta_price = -0.001
+        
+        # 计算临界值
+        temp = com_cap_irr - cap_irr
+        while temp * (com_cap_irr - cap_irr) > 0:
+            temp = com_cap_irr - cap_irr  # 保存上一个差值
+            finance.price += delta_price
+            flow = finance.com_finance()
+            com_cap_irr = Finance.com_irr(flow[2])
+    elif mode == 1:  # 要求项目投资 IRR 达标
+        if com_pro_irr < pro_irr:  # 低于标准 IRR
+            delta_price = 0.001 
+        else:
+            delta_price = -0.001
+        
+        # 计算临界值
+        temp = com_pro_irr - pro_irr
+        while temp * (com_pro_irr - pro_irr) > 0:
+            temp = com_pro_irr - pro_irr  # 保存上一个差值
+            finance.price += delta_price
+            flow = finance.com_finance()
+            com_pro_irr = Finance.com_irr(flow[1])
+    else:  # 要求项目投资 IRR 和资本金 IRR 均达标
+        if com_pro_irr < pro_irr or com_cap_irr < cap_irr:  # 低于标准 IRR
+            delta_price = 0.001 
+        else:
+            delta_price = -0.001
+        
+        # 计算临界值
+        cap_temp = com_cap_irr - cap_irr  # 暂存资本金指标差值
+        pro_temp = com_pro_irr - pro_irr  # 暂存项目指标差值
+        while pro_temp * (com_pro_irr - pro_irr) > 0 and cap_temp * (com_cap_irr - cap_irr) > 0:
+            pro_temp = com_pro_irr - pro_irr
+            cap_temp = com_cap_irr - cap_irr
+            finance.price += delta_price
+            flow = finance.com_finance()
+            com_pro_irr = Finance.com_irr(flow[1])
+            com_cap_irr = Finance.com_irr(flow[2])
+
+    # 返回结果
+    return finance.price
+    
 
 
 def cal_investment(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
@@ -151,3 +204,32 @@ def cal_capacity(parameter_list):
 
     """
     pass
+
+
+if __name__ == "__main__":
+    
+    # 程序功能测试
+    finance = Finance()  # 项目边界实例
+    pro_irr = 0.07  # 项目投资 IRR（税后） 标准（
+    cap_irr = 0.10  # 资本金 IRR（税后） 标准
+    
+    ## 电价临界面计算逻辑测试
+    price = []  # 临界电价列表（三维）
+    capacity=np.linspace(5,100,20)
+    aep = np.linspace(1800, 3000, 25)  # 
+    investment = np.linspace(5000, 8000, 61)  # 投资额变化序列  “元/kW”
+    for capa_item in capacity:
+        temp_price=[]  # 辅助临界电价测算列表
+        for aep_item in aep:
+            aux_price = []  # 辅助临界电价测算列表
+            for invest_item in investment:
+                finance.capacity = capa_item
+                finance.static_investment = invest_item * finance.capacity
+                finance.aep = aep_item
+                aux_price.append(cal_price(finance, pro_irr=pro_irr, cap_irr=cap_irr, mode=2))
+            temp_price.append(aux_price)
+        price.append(temp_price)
+    
+    # 输出结果
+    write_excel(price)
+    

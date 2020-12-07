@@ -48,8 +48,8 @@ class Finance(object):
         loan_rate: float, default = 0.054
             长期贷款利率，默认值为公司现阶段融资成本 5.4 %
 
-        working_rate: float, default = 0.06
-            流动资金贷款利率，默认值为 6.0 %
+        working_rate: float, default = 0.0435
+            流动资金贷款利率，默认值为 4.35 %
         
         rate_discount: float, default = 1.0
             长期贷款利率折扣，默认值 100 %，即无折扣
@@ -63,11 +63,11 @@ class Finance(object):
         vat_refund_rate: float, default = 0.5
             增值税退税比率（vat refund rate），默认值为 50 %
 
-        build_tax_rate: float, default = 0.005
-            城建税税率，默认值为 0.5 %
+        build_tax_rate: float, default = 0.05
+            城建税税率，默认值为 5 %
 
-        edu_surcharge_rate: float, default = 0.005
-            教育费及附加费率，默认值为 0.5 %  
+        edu_surcharge_rate: float, default = 0.05
+            教育费及附加费率，默认值为 5 %  
 
         workers: integer, default = 10
             员工人数，默认值为 10 人（1万kW装机匹配1人）
@@ -81,8 +81,8 @@ class Finance(object):
         out_repair_rate: float, default = 0.015
             质保期外修理费率（Out-of-warranty repair costs rate），默认值为 1.5 %
 
-        warranty: integer, default = 2
-            质保期，单位为“年”，默认值为 2 年
+        warranty: integer, default = 5
+            质保期，单位为“年”，默认值为 5 年
 
         insurance_rate: float, default = 0.0025
             保险费率，默认值为 0.25 %
@@ -111,8 +111,8 @@ class Finance(object):
         grace_period: integer, default = 1
             （长期贷款）宽限期，单位为“年”，默认值为 1 年
 
-        residual_rate: float, default = 0.05
-            残值率，默认值为 5 %
+        residual_rate: float, default = 0.04
+            残值率，默认值为 4 %
     
     备注：
     ----------
@@ -124,11 +124,11 @@ class Finance(object):
 
     def __init__(self, capacity=10.0, aep=2500.0, static_investment=68000.0,
                  price=0.3779, capital_ratio=0.25, working_ratio=0.3, equipment_cost=0.0, equipment_ratio=0.65,
-                 loan_rate=0.054, working_rate=0.06, rate_discount=1.0, income_tax_rate=0.25, build_tax_rate=0.005,
-                 vat_rate=0.13, vat_refund_rate=0.5, edu_surcharge_rate=0.005,workers=10, labor_cost=16.0, in_repair_rate=0.005,
-                 out_repair_rate=0.015, warranty=2.0, insurance_rate=0.0025, material_quota=10.0,
+                 loan_rate=0.054, working_rate=0.0435, rate_discount=1.0, income_tax_rate=0.25, build_tax_rate=0.05,
+                 vat_rate=0.13, vat_refund_rate=0.5, edu_surcharge_rate=0.05,workers=10, labor_cost=16.0, in_repair_rate=0.005,
+                 out_repair_rate=0.015, warranty=5.0, insurance_rate=0.0025, material_quota=10.0,
                  other_quota=30.0, working_quota=30.0, provident_rate=0.1, operate_period=20,
-                 build_period=1.0, loan_period=13, grace_period=1, residual_rate=0.05):
+                 build_period=1.0, loan_period=13, grace_period=1, residual_rate=0.04):
       """
       初始化类变量
       """
@@ -526,7 +526,7 @@ if __name__ == "__main__":
     pre_pro_irr = finance.com_irr(pre_pro_netflow)  # 项目税前 IRR
     after_pro_irr = finance.com_irr(after_pro_netflow)  # 项目税后 IRR
     cap_irr = finance.com_irr(cap_netflow)  # 资本金 IRR
-    
+
     # 打印结果
     print(pre_pro_irr, after_pro_irr, cap_irr)
 
