@@ -526,6 +526,7 @@ if __name__ == "__main__":
     pre_pro_irr = finance.com_irr(pre_pro_netflow)  # 项目税前 IRR
     after_pro_irr = finance.com_irr(after_pro_netflow)  # 项目税后 IRR
     cap_irr = finance.com_irr(cap_netflow)  # 资本金 IRR
+    
     # 打印结果
     print(pre_pro_irr, after_pro_irr, cap_irr)
 
