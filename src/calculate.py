@@ -86,16 +86,38 @@ def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
             delta_price = -0.001
         
         # 计算临界值
-        cap_temp = com_cap_irr - cap_irr  # 暂存资本金指标差值
-        pro_temp = com_pro_irr - pro_irr  # 暂存项目指标差值
-        while pro_temp * (com_pro_irr - pro_irr) > 0 and cap_temp * (com_cap_irr - cap_irr) > 0:
-            pro_temp = com_pro_irr - pro_irr
-            cap_temp = com_cap_irr - cap_irr
-            finance.price += delta_price
-            flow = finance.com_finance()
-            com_pro_irr = Finance.com_irr(flow[1])
-            com_cap_irr = Finance.com_irr(flow[2])
-
+        if com_cap_irr >= cap_irr and com_pro_irr >= pro_irr:
+            flag = (com_cap_irr - cap_irr) * (com_pro_irr - pro_irr) > 0
+            while flag:
+                finance.price += delta_price
+                flow = finance.com_finance()
+                com_pro_irr = Finance.com_irr(flow[1])
+                com_cap_irr = Finance.com_irr(flow[2])
+                flag = (com_cap_irr - cap_irr) * (com_pro_irr - pro_irr) > 0
+        elif com_cap_irr >= cap_irr and com_pro_irr <= pro_irr:
+            flag = com_pro_irr < pro_irr
+            while flag:
+                finance.price += delta_price
+                flow = finance.com_finance()
+                com_pro_irr = Finance.com_irr(flow[1])
+                com_cap_irr = Finance.com_irr(flow[2])
+                flag = com_pro_irr < pro_irr
+        elif com_cap_irr <= cap_irr and com_pro_irr >= pro_irr:
+            flag = com_cap_irr < cap_irr
+            while flag:
+                finance.price += delta_price
+                flow = finance.com_finance()
+                com_pro_irr = Finance.com_irr(flow[1])
+                com_cap_irr = Finance.com_irr(flow[2])
+                flag = com_cap_irr < cap_irr
+        else:
+            flag = com_cap_irr < cap_irr or com_pro_irr < pro_irr
+            while flag:
+                finance.price += delta_price
+                flow = finance.com_finance()
+                com_pro_irr = Finance.com_irr(flow[1])
+                com_cap_irr = Finance.com_irr(flow[2])
+                flag = com_cap_irr < cap_irr or com_pro_irr < pro_irr
     # 返回结果
     return finance.price
     
@@ -228,7 +250,6 @@ if __name__ == "__main__":
                 finance.aep = aep_item
                 finance.equipment_cost = finance.static_investment * finance.equipment_ratio
                 finance.workers = int(finance.capacity)
-                finance.price = 0.3779
                 aux_price.append(cal_price(finance, pro_irr=pro_irr, cap_irr=cap_irr, mode=2))
             temp_price.append(aux_price)
         price.append(temp_price)
