@@ -215,9 +215,9 @@ if __name__ == "__main__":
     
     ## 电价临界面计算逻辑测试
     price = []  # 临界电价列表（三维）
-    capacity=np.linspace(5,100,20)
-    aep = np.linspace(1800, 3000, 25)  # 
-    investment = np.linspace(5000, 8000, 61)  # 投资额变化序列  “元/kW”
+    capacity = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100])  # 装机容量   “万kW”
+    aep = np.linspace(1800, 3000, 25)  # 发电量序列  “小时”
+    investment = np.linspace(5000, 8000, 31)  # 投资额变化序列  “元/kW”
     for capa_item in capacity:
         temp_price=[]  # 辅助临界电价测算列表
         for aep_item in aep:
@@ -226,10 +226,16 @@ if __name__ == "__main__":
                 finance.capacity = capa_item
                 finance.static_investment = invest_item * finance.capacity
                 finance.aep = aep_item
+                finance.equipment_cost = finance.static_investment * finance.equipment_ratio
+                finance.workers = int(finance.capacity)
+                finance.price = 0.3779
                 aux_price.append(cal_price(finance, pro_irr=pro_irr, cap_irr=cap_irr, mode=2))
             temp_price.append(aux_price)
         price.append(temp_price)
     
     # 输出结果
-    write_excel(price)
-    
+    sheet_name = [str(k) + ' 万 kW' for k in capacity]
+    row_name = [str(k) for k in aep]
+    column_name = [str(k) for k in investment]
+
+    write_excel(price, sheet_name=sheet_name, row_header=row_name, column_header=column_name)

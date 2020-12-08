@@ -138,11 +138,11 @@ class Finance(object):
       self.price = price
       self.capital_ratio = capital_ratio
       self.working_ratio = working_ratio
+      self.equipment_ratio = equipment_ratio
       if equipment_cost == 0.0:
-          self.equipment_cost = static_investment * equipment_ratio
+          self.equipment_cost = self.static_investment * self.equipment_ratio
       else:
           self.equipment_cost = equipment_cost
-      self.equipment_ratio = equipment_ratio
       self.loan_rate = loan_rate
       self.working_rate = working_rate
       self.rate_discount = rate_discount
@@ -513,12 +513,14 @@ if __name__ == "__main__":
 
     # 实例化类对象，并测验相关算法逻辑
     finance = Finance()
-    finance.capacity = 10.0  # 风电场容量，万 kW
-    finance.aep = 2500.0  # 风电场年发电量，小时
-    finance.price = 0.3779  # 上网电价（含税），元/度
-    finance.static_investment = 6800 * 10  # 静态总投资，万元
+    finance.capacity = 5.0  # 风电场容量，万 kW
+    finance.aep = 1800.0  # 风电场年发电量，小时
+    finance.price = 0.3799  # 上网电价（含税），元/度
+    finance.static_investment = 5000 * finance.capacity  # 静态总投资，万元
+    finance.equipment_cost = finance.static_investment * finance.equipment_ratio
     finance.capital_ratio = 0.25  # 资本金比例
     finance.loan_rate = 0.054  # 贷款利率
+    finance.workers = int(finance.capacity)
     # 其它参数采用默认值
 
     # 计算项目的现金流和内部收益率
