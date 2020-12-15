@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 '''
-@File    :   finance.py
+@File    :   base.py
 @Time    :   2020/11/30 17:21:38
 @Author  :   liuzy2020 
 @Version :   1.0
@@ -9,6 +9,7 @@
 @WebSite :   https://github.com/path2019
 '''
 # Start typing your code from here
+# 财务评价有关的基础模块
 
 import numpy as np
 import math
