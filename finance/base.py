@@ -183,8 +183,8 @@ class Finance(object):
 
       返回结果：
       ----------
-        (finance_flow,capital_flow): (np.array<operate_period>,np.array<operate_period>)
-          财务现金流量表和资本金现金流量表组成的元表，每个财务现金流量表和资本金流量表数据长度为运营期长（运营年数，含建设期）
+        (pre_pro_netflow, after_pro_netflow, cap_netflow): (np.array<float>,np.array<float>)
+          税前财务现金流量、税后财务现金流量和资本金现金流量组成的元表，每个流量序列不含总计值
 
       备注：
       ----------

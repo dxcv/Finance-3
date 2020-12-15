@@ -13,7 +13,6 @@
 
 import numpy as np
 from finance.base import Finance
-from finance.tools import write_excel
 
 
 def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
@@ -232,31 +231,15 @@ if __name__ == "__main__":
     
     # 程序功能测试
     finance = Finance()  # 项目边界实例
-    pro_irr = 0.07  # 项目投资 IRR（税后） 标准（
+    finance.capacity = 10.0  # 项目容量 10 万 kW
+    finance.aep = 2500.0  # 项目年发电量 2500 小时
+    finance.static_investment = 6500 * finance.capacity  # 项目静态投资额
+    finance.equipment_cost = finance.static_investment * finance.equipment_ratio  # 设备购置费
+    finance.capital_ratio = 0.25  # 资本金比例 25%
+    finance.loan_rate = 0.054  # 贷款利率（长期）
+    finance.workers = 10  # 运维人员数量
+
+    pro_irr = 0.07  # 项目投资 IRR（税后） 标准
     cap_irr = 0.10  # 资本金 IRR（税后） 标准
     
-    ## 电价临界面计算逻辑测试
-    price = []  # 临界电价列表（三维）
-    capacity = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100])  # 装机容量   “万kW”
-    aep = np.linspace(1800, 3000, 25)  # 发电量序列  “小时”
-    investment = np.linspace(5000, 8000, 31)  # 投资额变化序列  “元/kW”
-    for capa_item in capacity:
-        temp_price=[]  # 辅助临界电价测算列表
-        for aep_item in aep:
-            aux_price = []  # 辅助临界电价测算列表
-            for invest_item in investment:
-                finance.capacity = capa_item
-                finance.static_investment = invest_item * finance.capacity
-                finance.aep = aep_item
-                finance.equipment_cost = finance.static_investment * finance.equipment_ratio
-                finance.workers = int(finance.capacity)
-                aux_price.append(cal_price(finance, pro_irr=pro_irr, cap_irr=cap_irr, mode=2))
-            temp_price.append(aux_price)
-        price.append(temp_price)
-    
-    # 输出结果
-    sheet_name = [str(k) + ' 万 kW' for k in capacity]
-    row_name = [str(k) for k in aep]
-    column_name = [str(k) for k in investment]
-
-    write_excel(price, sheet_name=sheet_name, row_header=row_name, column_header=column_name)
+    price = cal_price(finance, pro_irr=pro_irr, cap_irr=cap_irr, mode=2)
