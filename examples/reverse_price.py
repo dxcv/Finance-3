@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 '''
-@File    :   com_price.py
+@File    :   reverse_price.py
 @Time    :   2020/12/15 21:52:53
 @Author  :   liuzy2020 
 @Version :   1.0

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 '''
-@File    :   com_irr.py
+@File    :   direct_irr.py
 @Time    :   2020/12/15 20:58:40
 @Author  :   liuzy2020 
 @Version :   1.0
@@ -9,7 +9,7 @@
 @WebSite :   https://github.com/path2019
 '''
 # Start typing your code from here
-# 计算项目的 IRR 边界面
+# （正向直接）测算项目的 IRR 边界面
 
 import numpy as np
 import os, sys
