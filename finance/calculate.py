@@ -242,4 +242,8 @@ if __name__ == "__main__":
     pro_irr = 0.07  # 项目投资 IRR（税后） 标准
     cap_irr = 0.10  # 资本金 IRR（税后） 标准
     
+    # 计算临界电价
     price = cal_price(finance, pro_irr=pro_irr, cap_irr=cap_irr, mode=2)
+
+    # 打印结果
+    print(price)

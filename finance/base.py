@@ -170,25 +170,26 @@ class Finance(object):
 
     def com_finance(self, mode=False):
       """
-      计算类实例所抽象出的项目（边界）的财务现金流和资本金现金流序列。
+      计算类实例所抽象出的项目（边界）的（财务、资本金等）现金流序列。
 
       输入参数：
       ----------
         mode: bool, default = False
-          中间计算结果写入excel表格标识，若为True，则将中间计算结果输出到名字为file的excel文件中；
-          若为False，则中间计算结果不输出；默认值为 Fasle，即默认不输出中间结果。
-
-        file: str, default = ''
-          中间结果输出文件名称，与 mode 取值相关联，默认值为''（空字符串）
+          财务计算过程结果（表）返回标识，若为True，则将财评过程结果 com_result 返回；
+          若为False，则结果不返回；默认值为 Fasle，即默认不返回财评过程结果。
 
       返回结果：
       ----------
-        (pre_pro_netflow, after_pro_netflow, cap_netflow): (np.array<float>,np.array<float>)
+        1. 若 mode 为 False：
+        (pre_pro_netflow, after_pro_netflow, cap_netflow): (np.array<float>,np.array<float>,np.array<float>)
           税前财务现金流量、税后财务现金流量和资本金现金流量组成的元表，每个流量序列不含总计值
+        2. 若 mode 为 True:
+        (pre_pro_netflow, after_pro_netflow, cap_netflow, com_result): (np.array<float>,np.array<float>,np.array<float>,list)
+          前三个参数同上，com_result 为财评过程数据表，三维列表[表页[表单]]
 
       备注：
       ----------
-        1. 本方法是类对象的核心算法，会涉及到较大量的有效中间计算结果，需梳理好临时变量，以便能写入excel表；
+        1. 本方法是类对象的核心算法，会涉及到较大量的有效中间计算结果，需梳理好临时变量，以便能将结果输出；
         2. 注意临时变量的分类和初始化工作；
         3. 第一阶段默认建设期为 1 年，运营期（含建设期）为 21 年，后续再行扩充可变建设期和运营期。
       """
@@ -264,12 +265,6 @@ class Finance(object):
       recover_cap_working = np.zeros(row_cells)  # 回收流动资金（资本金）序列  “万元”
       cap_outflow = np.zeros(row_cells)  # 现金流出（资本金）序列  “万元”
       cap_netflow = np.zeros(row_cells)  # 资本金净现金流量  “万元”
-      ################################################################################
-      ## 处理 mode 为 TRUE 情况（即需要计算表格输出）
-      if mode == True:
-        investment_finance = [total_investment[: build_cells + 2], build_investment[: build_cells + 2], build_interest[: build_cells + 2], working_capital[: build_cells + 2],
-                              finance[: build_cells + 2], capital[: build_cells + 2], debt[: build_cells + 2], long_loan[: build_cells + 2], working_loan[: build_cells + 2]]  # 项目总投资使用计划与资金筹措
-        com_result=[investment_finance]  # 计算表格结果列表（项目总投资使用计划与资金筹措表，总成本费用估算表，借款还本付息计划表，利润与利润分配表，项目现金流量表，项目资本金流量表等）
       ################################################################################
       ################################################################################
       ## 投资计划与资金筹措（暂按建设期为 1 年的标准考虑）
@@ -397,6 +392,36 @@ class Finance(object):
       cap_inflow = income + subside + recover_asset + recover_cap_working  # 现金流入序列（资本金）
       cap_outflow = capital + long_principal + interest + operate_cost + operate_tax + income_tax # 现金流出序列（资本金）
       cap_netflow = cap_inflow - cap_outflow  # 净现金流量（资本金）
+      ################################################################################
+      ################################################################################
+      ## 处理 mode 为 TRUE 情况（即需要计算表格输出）
+      if mode == True:
+        # 项目总投资使用计划与资金筹措表
+        investment_finance = [total_investment[: build_cells + 2], build_investment[: build_cells + 2], build_interest[: build_cells + 2], working_capital[: build_cells + 2],
+                              finance[: build_cells + 2], capital[: build_cells + 2], debt[: build_cells + 2], long_loan[: build_cells + 2], working_loan[: build_cells + 2]]  
+        
+        # 总成本费用估算表
+        cost_finance = [material, wage, maintenance, insurance, other_expense, operate_cost,
+                        depreciation, amortization, interest, total_cost, var_cost, fix_cost]
+        
+        # 借款还本付息计划表
+        return_finance = [long_loan, long_opening, long_return, long_principal, long_interest, long_ending, working_loan, working_loan, working_return, working_principal, working_interest,
+                          working_loan-working_principal, long_loan+working_loan, long_opening+working_loan, total_return, long_principal+working_principal, long_interest+working_interest]
+        
+        # 利润和利润分配表
+        profit_finance = [income, operate_tax, build_tax, edu_surcharge, total_cost, subside,
+                          vat_return, vat_turn, profit, offset_loss, tax_income, income_tax, net_profit, provident, ebit]
+
+        # 项目现金流量表
+        pro_flow = [pro_inflow, income, subside, recover_asset, recover_pro_working, pro_outflow, build_investment,
+                    working_capital, operate_cost, operate_tax, pre_pro_netflow, income_tax, after_pro_netflow]
+        
+        # 项目资本金现金流量表
+        cap_flow = [cap_inflow, income, subside, recover_asset, recover_cap_working, cap_outflow,
+                    capital, long_return, interest, operate_cost, operate_tax, income_tax, cap_netflow]
+        
+        # 合并过程结果表（项目总投资使用计划与资金筹措表，总成本费用估算表，借款还本付息计划表，利润与利润分配表，项目现金流量表，项目资本金流量表等）
+        com_result = [investment_finance, cost_finance, return_finance, profit_finance, pro_flow, cap_flow]
       ################################################################################
       ################################################################################
       # 返回结果数组（元组）（总计值不再列入返回的流量表）
