@@ -12,6 +12,7 @@
 # 财务评价有关的基础模块
 
 import numpy as np
+import numpy_financial as npf
 import math
 
 
@@ -475,7 +476,7 @@ class Finance(object):
         2. 第一阶段暂不考虑输入参数无效的检查和处理；
         3. 注意极端情况的考虑。
       """
-      return np.irr(cash_array)
+      return npf.irr(cash_array)
 
     @staticmethod
     def com_present(cash_array, discount_rate=0.05):

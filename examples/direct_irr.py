@@ -25,14 +25,14 @@ from finance.tools import write_excel
 # 计算项目投资 IRR 和资本金 IRR
 finance = Finance()
 finance.capacity = 10.0  # 项目容量 10 万 kW
-finance.price = 0.3779  # 电价按河南省标杆上网电价 0.3779 元/度
-finance.capital_ratio = 0.25  # 资本金比例 25%
-finance.loan_rate = 0.054  # 贷款利率（长期）
+finance.price = 0.2829  # 电价按河南省标杆上网电价 0.3779 元/度
+finance.capital_ratio = 0.20  # 资本金比例 25%
+finance.loan_rate = 0.049  # 贷款利率（长期）
 finance.workers = 10  # 运维人员数量
 
 # 边界列表
-aep = np.linspace(1800, 3000, 25)  # 发电量序列  “小时”
-investment = np.linspace(5000, 8000, 31)  # 静态投资额变化序列  “元/kW”
+aep = np.linspace(2500, 4000, 16)  # 发电量序列  “小时”
+investment = np.linspace(5000, 6500, 16)  # 静态投资额变化序列  “元/kW”
 
 # 结果列表
 pre_pro_irr = []  # 税前项目投资 IRR 列表
@@ -61,4 +61,4 @@ sheet_name = ['税前项目投资 IRR', '税后项目投资 IRR', '项目资本�
 row_name = [str(k) for k in aep]
 column_name = [str(k) for k in investment]
 
-write_excel([pre_pro_irr,after_pro_irr,cap_irr], sheet_name=sheet_name, row_name=row_name, column_name=column_name)
+write_excel([pre_pro_irr,after_pro_irr,cap_irr], sheet_name=sheet_name, row_header=row_name, column_header=column_name)

@@ -25,15 +25,15 @@ from finance.tools import write_excel
 # 测算逻辑
 finance = Finance()
 finance.capacity = 10.0  # 项目容量 10 万 kW
-finance.aep = 2500.0  # 项目年发电量 2500 小时
-finance.static_investment = 6500 * finance.capacity  # 项目静态投资额
+finance.aep = 2750.0  # 项目年发电量 2500 小时
+finance.static_investment = 6000 * finance.capacity  # 项目静态投资额
 finance.equipment_cost = finance.static_investment * finance.equipment_ratio  # 项目设备购置费
-finance.capital_ratio = 0.25  # 资本金比例 25%
-finance.loan_rate = 0.054  # 贷款利率（长期）
+finance.capital_ratio = 0.20  # 资本金比例 25%
+finance.loan_rate = 0.049  # 贷款利率（长期）
 finance.workers = 10  # 运维人员数量
 
 # 边界列表
-price = np.linspace(0.2, 0.6, 41)  # 电价序列  “元/度”
+price = np.linspace(0.2, 0.35, 16)  # 电价序列  “元/度”
 
 # 结果列表
 pre_pro_irr = []  # 税前项目投资 IRR 列表
@@ -52,4 +52,4 @@ for price_item in price:
 row_name = ['税前项目 IRR', '税后项目 IRR', '资本金 IRR']
 column_name = [str(k) for k in price]
 
-write_excel([pre_pro_irr,after_pro_irr,cap_irr], row_name=row_name, column_name=column_name)
+write_excel([pre_pro_irr,after_pro_irr,cap_irr], row_header=row_name, column_header=column_name)

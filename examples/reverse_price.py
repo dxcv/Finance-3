@@ -12,6 +12,7 @@
 # 反向测算电价临界面
 
 import numpy as np
+
 import os, sys
 
 # 加载模块路径
@@ -43,8 +44,8 @@ for aep_item in aep:
         aux_price.append(cal_price(finance, pro_irr=pro_irr, cap_irr=cap_irr, mode=2))
     price.append(aux_price)
     
-    # 将结果矩阵写入 excel 表
-    row_name = [str(k) for k in aep]
-    column_name = [str(k) for k in investment]
+# 将结果矩阵写入 excel 表
+row_name = [str(k) for k in aep]
+column_name = [str(k) for k in investment]
 
-    write_excel(price, row_name=row_name, column_name=column_name)
+write_excel(price, row_header=row_name, column_header=column_name)
