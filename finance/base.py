@@ -9,46 +9,82 @@
 @WebSite :   https://github.com/path2019
 '''
 # Start typing your code from here
-# 财务评价有关的基础模块
+# 发电类工程项目财务评价：基础模块
 
 import numpy as np
 import numpy_financial as npf
 import math
 
+# 各省燃煤发电标杆上网电价
+Price = {'Beijing':0.3598,'Tianjin':0.3655,
+         'Jibei':0.372,'Jinan':0.3644,
+         'Shanxi':0.332,'Shandong':0.3949,
+         'Shanghai':0.4155,'Jiangsu':0.391,
+         'Zhejiang':0.4153,'Anhui':0.3844,
+         'Fujian':0.3932,'Jiangxi':0.4143,
+         'Hubei':0.4161,'Hunan':0.45,
+         'Henan':0.3779,'Sichuan':0.4012,
+         'Chongqing':0.3964,'Heilongjiang':0.374,
+         'Liaoning':0.3749,'Jilin':0.3731,
+         'Mengdong':0.3035,'Mengxi':0.2829,
+         'Shanxi':0.3545,'Gansu':0.3078,
+         'Ningxia':0.2595,'Qinghai':0.3247,
+         'Xinjiang':0.25,'Xizang':0.4993,
+         'Guangxi':0.4207,'Yunnan':0.3358,
+         'Guizhou':0.3515,'Hainan':0.4298,
+         'Guangdong':0.4530}
 
 class Finance(object):
     """ 项目财务分析主类
-    本类主要实现风电项目财务分析过程的抽象封装，
+    本类主要实现新能源项目财务分析过程的抽象封装，
     包括对应一次财务评价的项目边界参数、核心算法。
 
     成员变量：
     ----------
-        capacity: float, default = 10.0
-            风电场装机容量，单位为“万kW”，默认值为 10 万 kW
+        capacity: float, default = 100.0
+            装机容量，单位为“万kW”，默认值为 100 万 kW
         
         aep: float, default = 2500.0
-            年发电量（annual energy product），单位为“小时”（年等效满发上网小时数）
+            年发电量（annual energy product），单位为“小时”（年等效满发上网小时数），默认值为风电的2500小时
 
-        static_investment: float, default = 68000.0
-            项目静态总投资，单位为“万元”，默认值为 6800元/kW * 10万kW
+        static_investment: float, default = 500000.0
+            项目静态总投资，单位为“万元”，默认值为风电投资 5000元/kW * 100万kW
 
-        price: float, default = 0.3779
-            含税上网电价，单位为“元/度”，默认值为河南燃煤标杆上网电价
+        price: float, default = 0.2829
+            含税上网电价，单位为“元/度”，默认值为蒙西燃煤标杆上网电价
 
         equipment_cost: float, default = 0.0
             设备购置费，单位为“万元”，默认值为 0.0，此时在计算时动态给出其值 = 静态总投资 * equipment_ratio
         
-        equipment_ratio: float, default = 0.65
-            设备购置费占静态总投资的比例，默认值为 0.65
+        equipment_ratio: float, default = 0.7
+            设备购置费占静态总投资的比例，默认值为 0.7
+            
+        install_cost: float, default = 0.0
+            设备安装费，单位为“万元”，默认值为 0.0，此时在计算时动态给出其值 = 静态总投资 * install_ratio
+        
+        install_ratio: float, default = 0.07
+            设备安装费占静态总投资的比例，默认值为 0.07
+            
+        build_cost: float, default = 0.0
+            建筑工程费，单位为“万元”，默认值为 0.0，此时在计算时动态给出其值 = 静态总投资 * build_ratio
+        
+        build_ratio: float, default = 0.13
+            建筑工程费占静态总投资的比例，默认值为 0.13
+            
+        other_cost: float, default = 0.0
+            其它费用，单位为“万元”，默认值为 0.0，此时在计算时动态给出其值 = 静态总投资 * other_ratio
+        
+        other_ratio: float, default = 0.1
+           其它费用占静态总投资的比例，默认值为 0.1
 
-        capital_ratio: float, default = 0.25
-            资本金比例，默认值为公司现值 25 %
+        capital_ratio: float, default = 0.20
+            资本金比例，默认值为公司现值 20 %
 
         working_ratio: float, default = 0.3
             流动资金资本金比例，默认值为 30 %
 
-        loan_rate: float, default = 0.054
-            长期贷款利率，默认值为公司现阶段融资成本 5.4 %
+        loan_rate: float, default = 0.046
+            长期贷款利率，默认值为现阶段融资成本 4.6 %
 
         working_rate: float, default = 0.0435
             流动资金贷款利率，默认值为 4.35 %
@@ -63,7 +99,7 @@ class Finance(object):
             增值税税率（value-added tax rate），默认值为 13 %
 
         vat_refund_rate: float, default = 0.5
-            增值税退税比率（vat refund rate），默认值为 50 %
+            增值税退税比率（vat refund rate），默认值为风电的 50 %（光伏为 0.0）
 
         build_tax_rate: float, default = 0.05
             城建税税率，默认值为 5 %
@@ -71,20 +107,23 @@ class Finance(object):
         edu_surcharge_rate: float, default = 0.05
             教育费及附加费率，默认值为 5 %  
 
-        workers: integer, default = 10
-            员工人数，默认值为 10 人（1万kW装机匹配1人）
+        workers: integer, default = 25
+            员工人数，默认值为 25 人
 
         labor_cost: float, default = 16
-            人均人工成本，单位为“万元/年·人”，默认值为
+            人均人工成本，单位为“万元/年·人”，默认值为16万元/年·人（含60%的福利费）
 
         in_repair_rate: float, default = 0.005
-            质保期内修理费率（repair costs rate during the warranty period），默认值为 0.5 %
+            质保期内修理费率（repair costs rate during the warranty period），默认值为风电的 0.5 %（光伏为 0.2%）
 
         out_repair_rate: float, default = 0.015
-            质保期外修理费率（Out-of-warranty repair costs rate），默认值为 1.5 %
+            质保期外修理费率（Out-of-warranty repair costs rate），默认值为风电的 1.5 %（光伏为 0.5%）
 
         warranty: integer, default = 5
             质保期，单位为“年”，默认值为 5 年
+            
+        depreciation_period: integer, default = 20
+            折旧年限，单位为“年”，默认值为 20 年
 
         insurance_rate: float, default = 0.0025
             保险费率，默认值为 0.25 %
@@ -93,7 +132,7 @@ class Finance(object):
             单位材料费，单位为“元/kW”，默认值为 10.0 元/kW
 
         other_quota: float, default = 30.0
-            其它费用定额，单位为“元/kW”，默认值为 40.0 元/kW
+            其它费用定额，单位为“元/kW”，默认值为 30.0 元/kW
 
         working_quota: float, default = 30.0
             （铺底）流动资金定额，单位为“元/kW”，默认值为 30.0 元/kW
@@ -105,32 +144,43 @@ class Finance(object):
             建设期，单位为“年”，默认值为 1.0，即 1 年，建设期也会有不满一年的小数存在
 
         operate_period: integer, default = 20
-            经营期（operate period），不含建设期，单位为“年”，默认值为 20 年
+            经营期（operate period），不含建设期，单位为“年”，默认值为风电的 20 年（光伏25年）
 
-        loan_period: integer, default = 13
-            （长期贷款）借款期，单位为“年”，默认值为 13 年
+        loan_period: integer, default = 15
+            （长期贷款）借款期，单位为“年”，默认值为 15 年
 
         grace_period: integer, default = 1
             （长期贷款）宽限期，单位为“年”，默认值为 1 年
 
-        residual_rate: float, default = 0.04
-            残值率，默认值为 4 %
+        residual_rate: float, default = 0.05
+            残值率，默认值为 5 %
+            
+        ### 三个辅助性的流量表单
+        cost_list: list<double>, default = []
+            成本费辅助流量列表，单位为万元（在程序中动态初始化）
+            
+        cash_list: list<double>, default = []
+            项目现金流量辅助列表，单位为万元（在程序中动态初始化）
+            
+        cap_list: list<double>, default = []
+            资本金现金流量辅助列表，单位为万元（在程序中动态初始化）          
     
     备注：
     ----------
         1. 第一阶段版本暂按照“等额本金”的方式测算，“等额本息”的模式后续再行补充；
-        2. 第一阶段版本仅考虑风电项目的收益测算，光伏项目和其它能源项目的测算逻辑后续再行添加；
+        2. 第一阶段版本仅考虑发电类工程项目的收益测算，其它非电类能源项目的测算逻辑后续再行添加；
         3. 第一阶段一些细节暂做概化（如造价构成、人员工资构成等），后续根据需要进行展开；
         
     """
 
-    def __init__(self, capacity=10.0, aep=2500.0, static_investment=68000.0,
-                 price=0.3779, capital_ratio=0.25, working_ratio=0.3, equipment_cost=0.0, equipment_ratio=0.65,
-                 loan_rate=0.054, working_rate=0.0435, rate_discount=1.0, income_tax_rate=0.25, build_tax_rate=0.05,
-                 vat_rate=0.13, vat_refund_rate=0.5, edu_surcharge_rate=0.05,workers=10, labor_cost=16.0, in_repair_rate=0.005,
-                 out_repair_rate=0.015, warranty=5.0, insurance_rate=0.0025, material_quota=10.0,
-                 other_quota=30.0, working_quota=30.0, provident_rate=0.1, operate_period=20,
-                 build_period=1.0, loan_period=13, grace_period=1, residual_rate=0.04):
+    def __init__(self, capacity=100.0, aep=2500.0, static_investment=500000.0,
+                 price=0.2829, capital_ratio=0.20, working_ratio=0.3, equipment_cost=0.0, equipment_ratio=0.7,
+                 install_cost=0.0,install_ratio=0.07, build_cost=0.0, build_ratio=0.13, other_cost=0.0, other_ratio=0.1,
+                 loan_rate=0.046, working_rate=0.0435, rate_discount=1.0, income_tax_rate=0.25, build_tax_rate=0.05,
+                 vat_rate=0.13, vat_refund_rate=0.5, edu_surcharge_rate=0.05,workers=25, labor_cost=16.0, in_repair_rate=0.005,
+                 out_repair_rate=0.015, warranty=5.0, depreciation_period=20,insurance_rate=0.0025, material_quota=10.0,
+                 other_quota=30.0, working_quota=30.0, provident_rate=0.1, operate_period=20, build_period=1.0, loan_period=15, 
+                 grace_period=1, residual_rate=0.05, cost_list=[], cash_list=[], cap_list=[]):
       """
       初始化类变量
       """
@@ -140,11 +190,14 @@ class Finance(object):
       self.price = price
       self.capital_ratio = capital_ratio
       self.working_ratio = working_ratio
+      self.equipment_cost = equipment_cost
       self.equipment_ratio = equipment_ratio
-      if equipment_cost == 0.0:
-          self.equipment_cost = self.static_investment * self.equipment_ratio
-      else:
-          self.equipment_cost = equipment_cost
+      self.install_cost = install_cost
+      self.install_ratio = install_ratio
+      self.build_cost = build_cost
+      self.build_ratio = build_ratio
+      self.other_cost = other_cost
+      self.other_ratio = other_ratio
       self.loan_rate = loan_rate
       self.working_rate = working_rate
       self.rate_discount = rate_discount
@@ -158,6 +211,7 @@ class Finance(object):
       self.in_repair_rate = in_repair_rate
       self.out_repair_rate = out_repair_rate
       self.warranty = int(warranty)
+      self.depreciation_period = int(depreciation_period)
       self.insurance_rate = insurance_rate
       self.material_quota = material_quota
       self.other_quota = other_quota
@@ -168,6 +222,9 @@ class Finance(object):
       self.loan_period = loan_period
       self.grace_period = grace_period
       self.residual_rate = residual_rate
+      self.cost_list = cost_list
+      self.cash_list = cash_list
+      self.cap_list = cap_list
 
     def com_finance(self, mode=False):
       """
@@ -223,6 +280,7 @@ class Finance(object):
       fix_cost = np.zeros(row_cells)  # 固定成本序列  “万元”
       var_cost = np.zeros(row_cells)  # 可变成本序列  “万元”
       total_cost = np.zeros(row_cells)  # 总成本费用序列  “万元”
+      self.cost_list = np.zeros(row_cells)  # 成本费用辅助流量表单  “万元”
       ################################################################################      
       ## 借款还本付息计划
       long_opening = np.zeros(row_cells)  # 长贷期初余额序列 “万元”
@@ -236,7 +294,9 @@ class Finance(object):
       total_return = np.zeros(row_cells)  # 当期还本付息总计序列  “万元”
       ################################################################################
       ## 利润和利润分配
+      power =np.zeros(row_cells)  # 发电量序列
       income = np.zeros(row_cells)  # 营业收入序列  “万元”
+      vat = np.zeros(row_cells)  # 增值税序列
       intax_balance = np.zeros(row_cells)  # 进项税抵扣余额序列  “万元”
       operate_tax = np.zeros(row_cells)  # 营业税金及附加序列  “万元”
       build_tax = np.zeros(row_cells)  # 城建税序列  “万元”
@@ -260,12 +320,14 @@ class Finance(object):
       pro_outflow = np.zeros(row_cells)  # 项目现金流出序列  “万元”
       pre_pro_netflow = np.zeros(row_cells)  # 所得税前项目净现金流量  “万元”
       after_pro_netflow = np.zeros(row_cells)  # 所得税后项目净现金流量  “万元”
+      self.cash_list = np.zeros(row_cells)  # 项目现金流辅助流标表单  “万元”
       ################################################################################
       # 项目资本金现金流量
       cap_inflow = np.zeros(row_cells)  # 现金流入（资本金）序列  “万元”
       recover_cap_working = np.zeros(row_cells)  # 回收流动资金（资本金）序列  “万元”
       cap_outflow = np.zeros(row_cells)  # 现金流出（资本金）序列  “万元”
       cap_netflow = np.zeros(row_cells)  # 资本金净现金流量  “万元”
+      self.cap_list = np.zeros(row_cells)  # 资本金现金流量辅助流量表单  “万元”
       ################################################################################
       ################################################################################
       ## 投资计划与资金筹措（暂按建设期为 1 年的标准考虑）
@@ -288,9 +350,19 @@ class Finance(object):
       ################################################################################
       ################################################################################
       ## 临时辅助性变量
-      vat_deduction = self.equipment_cost / (1 + self.vat_rate) * self.vat_rate  # 增值税进项税抵扣额  “万元”
+      if self.equipment_ratio != 0.0:
+            self.equipment_cost = self.static_investment * self.equipment_ratio
+      if self.install_ratio != 0.0:
+            self.install_cost = self.static_investment * self.install_ratio
+      if self.build_ratio != 0.0:
+            self.build_cost = self.static_investment * self.build_ratio
+      if self.other_ratio != 0.0:
+            self.other_cost = self.static_investment * self.other_ratio
+            
+      vat_deduction = self.equipment_cost / (1 + self.vat_rate) * self.vat_rate + (
+          self.build_cost + self.install_cost) / (1 + 0.09) * 0.09 + self.other_cost / (1 + 0.06) * 0.06  # 增值税进项税抵扣额  “万元”
       fix_assets = total_investment[1] - vat_deduction  # 固定资产价值  “万元”
-      output_vat = self.capacity * self.aep * self.price * self.vat_rate / (1 + self.vat_rate)  # 增值税销项税  “万元”
+#      output_vat = self.capacity * self.aep * self.price * self.vat_rate / (1 + self.vat_rate)  # 增值税销项税  “万元”
       ################################################################################
       ################################################################################
       ## 总成本费用估算
@@ -300,7 +372,8 @@ class Finance(object):
       maintenance[build_cells + 1 + self.warranty :] = fix_assets * self.out_repair_rate  # 质保期外维修费序列
       insurance[build_cells + 1 :] = fix_assets * self.insurance_rate  # 保险费序列
       other_expense[build_cells + 1 :] = self.capacity * self.other_quota  # 其它费用序列
-      depreciation[build_cells + 1:] = fix_assets * (1 - self.residual_rate) / self.operate_period  # 折旧费序列
+      depreciation[build_cells + 1:build_cells + 1 + self.depreciation_period] = fix_assets * \
+          (1 - self.residual_rate) / self.depreciation_period  # 折旧费序列
       depreciation[0] = np.sum(depreciation)  # 总折旧费
       maintenance[0] = np.sum(maintenance)  # 总维修费
       wage[0] = np.sum(wage)  # 总工资和福利费
@@ -309,7 +382,7 @@ class Finance(object):
       other_expense[0] = np.sum(other_expense)  # 总其它费
       amortization[0] = np.sum(amortization)  # 总摊销费
       var_cost = material  # 可变成本序列
-      operate_cost = maintenance + wage + insurance + material + other_expense  # 运营成本序列
+      operate_cost = maintenance + wage + insurance + material + other_expense + self.cost_list  # 运营成本序列
       ################################################################################
       ################################################################################
       ## 借款还本付息计划
@@ -328,21 +401,31 @@ class Finance(object):
       working_return = working_interest + working_principal  # 流动资金还本付息合计
       interest = long_interest + working_interest  # 总利息支出序列
       total_return = long_return + working_return  # 当期还本付息总计序列
-      fix_cost = depreciation + maintenance + wage + insurance + interest + other_expense  # 固定成本序列
-      total_cost = depreciation + maintenance + wage + insurance + material + amortization + interest + other_expense  # 总成本费用序列
+      total_cost = depreciation + operate_cost + amortization + interest  # 总成本费用序列
+      fix_cost = total_cost - var_cost  # 固定成本序列
       ################################################################################
       ################################################################################
       ## 利润和利润分配
-      income[build_cells + 1 :] = self.capacity * self.aep * self.price / (1 + self.vat_rate)  # 运营期营业收入序列
+      power[build_cells + 1] = self.capacity * self.aep / 0.93112
+      power[build_cells + 2] = power[build_cells + 1]*0.98
+      for i in range(self.operate_period-2):
+        power[build_cells + 3 + i] = power[build_cells + 2] * (0.9755-i * 0.0045)  # 发电量序列
+      income[build_cells + 1:] = power[build_cells+1:] * self.price / (1 + self.vat_rate)  # 运营期营业收入序列
       income[0] = np.sum(income)  # 运营期营业收入总计
+      vat[build_cells+1:] = income[build_cells + 1:] * self.vat_rate/(1+self.vat_rate)  # 增值税序列
+      vat[0] = np.sum(vat)  # 增值税总计
       for i in range(self.operate_period):
-        intax_balance[build_cells + 1 + i] = vat_deduction - i * output_vat  # 进项税抵扣余额序列
+        if i == 0:
+          intax_balance[build_cells + 1 + i] = vat_deduction  # 进项税抵扣余额序列
+        else:
+          intax_balance[build_cells + 1 + i] = intax_balance[build_cells + i] - vat[build_cells+i]
+      for i in range(self.operate_period):
         if intax_balance[build_cells + 1 + i] <= 0:
-          build_tax[build_cells + 1 + i] = output_vat * self.build_tax_rate  # 城建税序列（设备进项税抵扣完后）
-          edu_surcharge[build_cells + 1 + i] = output_vat * self.edu_surcharge_rate  # 教育费及附加序列
-        elif intax_balance[build_cells + 1 + i] > 0 and vat_deduction - (i + 1) * output_vat <= 0:
-          build_tax[build_cells + 1 + i] = (output_vat - intax_balance[build_cells + 1 + i]) * self.build_tax_rate  # 城建税序列（设备进项税即将不足抵扣）
-          edu_surcharge[build_cells + 1 + i] = (output_vat - intax_balance[build_cells + 1 + i]) * self.edu_surcharge_rate  # 教育费及附加序列
+          build_tax[build_cells + 1 + i] = vat[build_cells+1+i] * self.build_tax_rate  # 城建税序列（设备进项税抵扣完后）
+          edu_surcharge[build_cells + 1 + i] = vat[build_cells + 1+i] * self.edu_surcharge_rate  # 教育费及附加序列
+        elif intax_balance[build_cells + 1 + i] > 0 and intax_balance[build_cells + 1 + i] - vat[build_cells+1+i] <= 0:
+          build_tax[build_cells + 1 + i] = (vat[build_cells + 1 + i] - intax_balance[build_cells + 1 + i]) * self.build_tax_rate  # 城建税序列（设备进项税即将不足抵扣）
+          edu_surcharge[build_cells + 1 + i] = (vat[build_cells + 1 + i] - intax_balance[build_cells + 1 + i]) * self.edu_surcharge_rate  # 教育费及附加序列
         else:
           build_tax[build_cells + 1 + i] = 0  # 城建税序列（设备进项税未抵扣完）
           edu_surcharge[build_cells + 1 + i] = 0  # 教育费及附加序列
@@ -353,8 +436,8 @@ class Finance(object):
       for i in range(build_cells + 1, self.operate_period):  # 计算销项税序列
         if intax_balance[i] < 0:
           vat_turn[i] = 0
-        elif intax_balance[i] >= output_vat:
-          vat_turn[i] = output_vat
+        elif intax_balance[i] >= vat[i]:
+          vat_turn[i] = vat[i]
         else:
           vat_turn[i] = intax_balance[i]
       vat_turn[0] = np.sum(vat_turn)  # 增值税转型（销项税额）总计
@@ -370,7 +453,7 @@ class Finance(object):
           income_tax[build_cells + 1 + i] = tax_income[build_cells + 1 + i] * self.income_tax_rate / 2  # “三减半”
         else:
           income_tax[build_cells + 1 + i] = tax_income[build_cells + 1 + i] * self.income_tax_rate  # 正常所得税序列
-      income_tax[0]=np.sum(income_tax)  # 所得税总计
+      income_tax[0] = np.sum(income_tax)  # 所得税总计
       net_profit = profit - income_tax  # 净利润序列
       provident = net_profit * self.provident_rate  # 法定盈余公积金序列
       distribute_profit = net_profit - provident  # 可供投资者分配的利润序列
@@ -384,7 +467,7 @@ class Finance(object):
       recover_pro_working[0] = np.sum(recover_pro_working)  # 回收项目流动资金总计
       pro_inflow = income + subside + recover_asset + recover_pro_working  # 项目现金流入序列
       pro_outflow = build_investment + working_capital + operate_cost + operate_tax  # 项目现金流出序列  “万元”
-      pre_pro_netflow = pro_inflow - pro_outflow  #  所得税前项目净现金流量  “万元”
+      pre_pro_netflow = pro_inflow - pro_outflow + self.cash_list  #  所得税前项目净现金流量  “万元”
       after_pro_netflow = pre_pro_netflow - income_tax  # 所得税后项目净现金流量  “万元”
       ################################################################################
       ################################################################################
@@ -392,7 +475,7 @@ class Finance(object):
       recover_cap_working[[0, build_cells + self.operate_period]] = working_capital[build_cells + 1] * self.working_ratio  # 回收流动资金（资本金）
       cap_inflow = income + subside + recover_asset + recover_cap_working  # 现金流入序列（资本金）
       cap_outflow = capital + long_principal + interest + operate_cost + operate_tax + income_tax # 现金流出序列（资本金）
-      cap_netflow = cap_inflow - cap_outflow  # 净现金流量（资本金）
+      cap_netflow = cap_inflow - cap_outflow + self.cap_list  # 净现金流量（资本金）
       ################################################################################
       ################################################################################
       ## 处理 mode 为 TRUE 情况（即需要计算表格输出）
@@ -544,7 +627,6 @@ if __name__ == "__main__":
     finance.aep = 1800.0  # 风电场年发电量，小时
     finance.price = 0.3799  # 上网电价（含税），元/度
     finance.static_investment = 5000 * finance.capacity  # 静态总投资，万元
-    finance.equipment_cost = finance.static_investment * finance.equipment_ratio
     finance.capital_ratio = 0.25  # 资本金比例
     finance.loan_rate = 0.054  # 贷款利率
     finance.workers = int(finance.capacity)

@@ -15,7 +15,7 @@ import numpy as np
 from finance.base import Finance
 
 
-def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
+def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
     """
     计算满足特定收益条件下的电价（含税）临界面。
 
@@ -24,17 +24,17 @@ def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
         finance: Finance
             与财务评价相关的项目各项边界，具体边界条目和默认值参见 Finance 类定义
         
-        pro_irr: float, default = 0.07
-            项目投资内部收益率（税后），默认值为 7 %
+        pro_irr: float, default = 0.06
+            项目投资内部收益率（税后），默认值为 6 %
         
-        cap_irr: float, default = 0.1
-            项目资本金内部收益率（税后），默认值为 10 %
+        cap_irr: float, default = 0.08
+            项目资本金内部收益率（税后），默认值为 8 %
         
         mode: integer, default = 0
             测算模式，对应不同的收益边界要求
-                0：资本金 IRR >= 10 %
-                1：项目 IRR >= 7 %
-                2：资本金 IRR >= 10 % and 项目 IRR >= 7 %
+                0：资本金 IRR >= cap_irr 
+                1：项目 IRR >= pro_irr 
+                2：资本金 IRR >= cap_irr and 项目 IRR >= pro_irr
     
     返回结果：
     ----------
@@ -54,9 +54,9 @@ def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
 
     if mode == 0:  # 要求资本金 IRR 达标
         if com_cap_irr < cap_irr:  # 低于标准 IRR
-            delta_price = 0.001 
+            delta_price = 0.0001 
         else:
-            delta_price = -0.001
+            delta_price = -0.0001
         
         # 计算临界值
         temp = com_cap_irr - cap_irr
@@ -67,9 +67,9 @@ def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
             com_cap_irr = Finance.com_irr(flow[2])
     elif mode == 1:  # 要求项目投资 IRR 达标
         if com_pro_irr < pro_irr:  # 低于标准 IRR
-            delta_price = 0.001 
+            delta_price = 0.0001 
         else:
-            delta_price = -0.001
+            delta_price = -0.0001
         
         # 计算临界值
         temp = com_pro_irr - pro_irr
@@ -80,9 +80,9 @@ def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
             com_pro_irr = Finance.com_irr(flow[1])
     else:  # 要求项目投资 IRR 和资本金 IRR 均达标
         if com_pro_irr < pro_irr or com_cap_irr < cap_irr:  # 低于标准 IRR
-            delta_price = 0.001 
+            delta_price = 0.0001 
         else:
-            delta_price = -0.001
+            delta_price = -0.0001
         
         # 计算临界值
         if com_cap_irr >= cap_irr and com_pro_irr >= pro_irr:
@@ -122,7 +122,7 @@ def cal_price(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
     
 
 
-def cal_investment(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
+def cal_investment(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
     """
     计算满足给定收益水平下的项目造价临界面。
 
@@ -131,17 +131,17 @@ def cal_investment(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
         finance: Finance
             与财务评价相关的项目各项边界，具体边界条目和默认值参见 Finance 类定义
         
-        pro_irr: float, default = 0.07
-            项目投资内部收益率（税后），默认值为 7 %
+        pro_irr: float, default = 0.06
+            项目投资内部收益率（税后），默认值为 6 %
         
-        cap_irr: float, default = 0.1
-            项目资本金内部收益率（税后），默认值为 10 %
+        cap_irr: float, default = 0.08
+            项目资本金内部收益率（税后），默认值为 8 %
         
         mode: integer, default = 0
             测算模式，对应不同的收益边界要求
-                0：资本金 IRR >= 10 %
-                1：项目 IRR >= 7 %
-                2：资本金 IRR >= 10 % and 项目 IRR >= 7 %
+                0：资本金 IRR >= cap_irr
+                1：项目 IRR >= pro_irr
+                2：资本金 IRR >= cap_irr and 项目 IRR >= pro_irr
     
     返回结果：
     ----------
@@ -157,7 +157,7 @@ def cal_investment(finance, pro_irr=0.07, cap_irr=0.1, mode=0):
     pass
 
 
-def cal_aep(finance,pro_irr=0.07, cap_irr=0.1, mode=0):
+def cal_aep(finance,pro_irr=0.06, cap_irr=0.08, mode=0):
     """
     计算满足给定收益水平下的项目年发电量临界面。
 
@@ -166,17 +166,17 @@ def cal_aep(finance,pro_irr=0.07, cap_irr=0.1, mode=0):
         finance: Finance
             与财务评价相关的项目各项边界，具体边界条目和默认值参见 Finance 类定义
         
-        pro_irr: float, default = 0.07
-            项目投资内部收益率（税后），默认值为 7 %
+        pro_irr: float, default = 0.06
+            项目投资内部收益率（税后），默认值为 6 %
         
-        cap_irr: float, default = 0.1
-            项目资本金内部收益率（税后），默认值为 10 %
+        cap_irr: float, default = 0.08
+            项目资本金内部收益率（税后），默认值为 8 %
         
         mode: integer, default = 0
             测算模式，对应不同的收益边界要求
-                0：资本金 IRR >= 10 %
-                1：项目 IRR >= 7 %
-                2：资本金 IRR >= 10 % and 项目 IRR >= 7 %
+                0：资本金 IRR >= cap_irr
+                1：项目 IRR >= pro_irr
+                2：资本金 IRR >= cap_irr and 项目 IRR >= pro_irr
     
     返回结果：
     ----------
@@ -201,17 +201,17 @@ def cal_capacity(parameter_list):
         finance: Finance
             与财务评价相关的项目各项边界，具体边界条目和默认值参见 Finance 类定义
         
-        pro_irr: float, default = 0.07
-            项目投资内部收益率（税后），默认值为 7 %
+        pro_irr: float, default = 0.06
+            项目投资内部收益率（税后），默认值为 6 %
         
-        cap_irr: float, default = 0.1
-            项目资本金内部收益率（税后），默认值为 10 %
+        cap_irr: float, default = 0.08
+            项目资本金内部收益率（税后），默认值为 8 %
         
         mode: integer, default = 0
             测算模式，对应不同的收益边界要求
-                0：资本金 IRR >= 10 %
-                1：项目 IRR >= 7 %
-                2：资本金 IRR >= 10 % and 项目 IRR >= 7 %
+                0：资本金 IRR >= cap_irr
+                1：项目 IRR >= pro_irr
+                2：资本金 IRR >= cap_irr and 项目 IRR >= pro_irr
     
     返回结果：
     ----------
