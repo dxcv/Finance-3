@@ -25,6 +25,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 *.xlsx
+*.jpeg
+*.docx
+*.png
 resource/
 ui.py
 main.py
