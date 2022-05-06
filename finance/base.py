@@ -16,23 +16,24 @@ import numpy_financial as npf
 import math
 
 # 各省燃煤发电标杆上网电价
-Price = {'Beijing':0.3598,'Tianjin':0.3655,
-         'Jibei':0.372,'Jinan':0.3644,
-         'Shanxi':0.332,'Shandong':0.3949,
-         'Shanghai':0.4155,'Jiangsu':0.391,
-         'Zhejiang':0.4153,'Anhui':0.3844,
-         'Fujian':0.3932,'Jiangxi':0.4143,
-         'Hubei':0.4161,'Hunan':0.45,
-         'Henan':0.3779,'Sichuan':0.4012,
-         'Chongqing':0.3964,'Heilongjiang':0.374,
-         'Liaoning':0.3749,'Jilin':0.3731,
-         'Mengdong':0.3035,'Mengxi':0.2829,
-         'Shanxi':0.3545,'Gansu':0.3078,
-         'Ningxia':0.2595,'Qinghai':0.3247,
-         'Xinjiang':0.25,'Xizang':0.4993,
-         'Guangxi':0.4207,'Yunnan':0.3358,
-         'Guizhou':0.3515,'Hainan':0.4298,
-         'Guangdong':0.4530}
+# Price = {'Beijing':0.3598,'Tianjin':0.3655,
+#          'Jibei':0.372,'Jinan':0.3644,
+#          'Shanxi':0.332,'Shandong':0.3949,
+#          'Shanghai':0.4155,'Jiangsu':0.391,
+#          'Zhejiang':0.4153,'Anhui':0.3844,
+#          'Fujian':0.3932,'Jiangxi':0.4143,
+#          'Hubei':0.4161,'Hunan':0.45,
+#          'Henan':0.3779,'Sichuan':0.4012,
+#          'Chongqing':0.3964,'Heilongjiang':0.374,
+#          'Liaoning':0.3749,'Jilin':0.3731,
+#          'Mengdong':0.3035,'Mengxi':0.2829,
+#          'Shanxi':0.3545,'Gansu':0.3078,
+#          'Ningxia':0.2595,'Qinghai':0.3247,
+#          'Xinjiang':0.25,'Xizang':0.4993,
+#          'Guangxi':0.4207,'Yunnan':0.3358,
+#          'Guizhou':0.3515,'Hainan':0.4298,
+#          'Guangdong':0.4530}
+Price = {'Ningxia':0.2425}
 
 class Finance(object):
     """ 项目财务分析主类

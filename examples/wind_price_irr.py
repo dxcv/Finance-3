@@ -31,7 +31,8 @@ finance.install_ratio = 0.07  # 设备安装费占静态投资比例系数
 finance.other_ratio = 0.1  # 其它费用占静态投资比例系数
 finance.capital_ratio = 0.20  # 资本金比例
 finance.working_ratio = 0.30  # 流动资金资本金比例
-finance.loan_rate = 0.046  # 贷款利率（长期）
+#finance.loan_rate = 0.046  # 贷款利率（长期）
+finance.loan_rate = 0.03  # 贷款利率（长期）
 finance.working_rate = 0.0435  # 流动资金贷款利率
 finance.rate_discount = 1.0  # 长期贷款利率折扣（1为无）
 finance.vat_refund_rate =0.5  # 增值税退税比率
@@ -89,4 +90,4 @@ for invest in investment:
 
     write_excel([pre_pro_irr,after_pro_irr,cap_irr], sheet_name=sheet_name, 
                 row_header=row_name, column_header=column_name,
-                file='风电收益-' + str(invest) + '.xlsx')
+                file='利率下调-风电收益-' + str(invest) + '.xlsx')

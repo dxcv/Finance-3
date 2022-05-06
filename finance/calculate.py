@@ -24,8 +24,8 @@ def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
         finance: Finance
             与财务评价相关的项目各项边界，具体边界条目和默认值参见 Finance 类定义
         
-        pro_irr: float, default = 0.06
-            项目投资内部收益率（税后），默认值为 6 %
+        pro_irr: float, default = 0.065
+            项目投资内部收益率（税前），默认值为 6.5 %
         
         cap_irr: float, default = 0.08
             项目资本金内部收益率（税后），默认值为 8 %
@@ -48,7 +48,7 @@ def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
     
     """
     flow = finance.com_finance()  # 现金流元组（项目税前净现金流，项目税后净现金流，资本金现金流）
-    com_pro_irr = Finance.com_irr(flow[1])  # 计算所得项目税后 IRR
+    com_pro_irr = Finance.com_irr(flow[0])  # 计算所得项目税前 IRR
     com_cap_irr = Finance.com_irr(flow[2])  # 计算所得资本金 IRR（税后）
     delta_price = 0.0  # 电价递增幅度，单位为“元”，将根据具体模式和具体计算结果确定增长方向
 
@@ -77,7 +77,7 @@ def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
             temp = com_pro_irr - pro_irr  # 保存上一个差值
             finance.price += delta_price
             flow = finance.com_finance()
-            com_pro_irr = Finance.com_irr(flow[1])
+            com_pro_irr = Finance.com_irr(flow[0])
     else:  # 要求项目投资 IRR 和资本金 IRR 均达标
         if com_pro_irr < pro_irr or com_cap_irr < cap_irr:  # 低于标准 IRR
             delta_price = 0.0001 
@@ -90,7 +90,7 @@ def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
             while flag:
                 finance.price += delta_price
                 flow = finance.com_finance()
-                com_pro_irr = Finance.com_irr(flow[1])
+                com_pro_irr = Finance.com_irr(flow[0])
                 com_cap_irr = Finance.com_irr(flow[2])
                 flag = (com_cap_irr - cap_irr) * (com_pro_irr - pro_irr) > 0
         elif com_cap_irr >= cap_irr and com_pro_irr <= pro_irr:
@@ -98,7 +98,7 @@ def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
             while flag:
                 finance.price += delta_price
                 flow = finance.com_finance()
-                com_pro_irr = Finance.com_irr(flow[1])
+                com_pro_irr = Finance.com_irr(flow[0])
                 com_cap_irr = Finance.com_irr(flow[2])
                 flag = com_pro_irr < pro_irr
         elif com_cap_irr <= cap_irr and com_pro_irr >= pro_irr:
@@ -106,7 +106,7 @@ def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
             while flag:
                 finance.price += delta_price
                 flow = finance.com_finance()
-                com_pro_irr = Finance.com_irr(flow[1])
+                com_pro_irr = Finance.com_irr(flow[0])
                 com_cap_irr = Finance.com_irr(flow[2])
                 flag = com_cap_irr < cap_irr
         else:
@@ -114,7 +114,7 @@ def cal_price(finance, pro_irr=0.06, cap_irr=0.08, mode=0):
             while flag:
                 finance.price += delta_price
                 flow = finance.com_finance()
-                com_pro_irr = Finance.com_irr(flow[1])
+                com_pro_irr = Finance.com_irr(flow[0])
                 com_cap_irr = Finance.com_irr(flow[2])
                 flag = com_cap_irr < cap_irr or com_pro_irr < pro_irr
     # 返回结果
