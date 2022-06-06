@@ -31,7 +31,7 @@ finance.install_ratio = 0.07  # 设备安装费占静态投资比例系数
 finance.other_ratio = 0.1  # 其它费用占静态投资比例系数
 finance.capital_ratio = 0.20  # 资本金比例
 finance.working_ratio = 0.30  # 流动资金资本金比例
-finance.loan_rate = 0.046  # 贷款利率（长期）
+finance.loan_rate = 0.0175  # 贷款利率（长期）
 finance.working_rate = 0.0435  # 流动资金贷款利率
 finance.rate_discount = 1.0  # 长期贷款利率折扣（1为无）
 finance.vat_refund_rate =0.0  # 增值税退税比率
@@ -53,8 +53,10 @@ finance.cash_list = []  # 项目现金流量辅助列表（万元）
 finance.cap_list = []  # 资本金现金流量辅助列表（万元）
 
 # 边界列表
-aep = np.linspace(1000, 2000, 101)  # 发电量序列  “小时”
-investment = np.linspace(3000, 5000, 5)  # 静态投资额变化序列  “元/kW”
+# aep = np.linspace(1000, 2000, 101)  # 发电量序列  “小时”
+# investment = np.linspace(3000, 5000, 5)  # 静态投资额变化序列  “元/kW”
+aep = [1700,1850]  # 发电量序列  “小时”
+investment = [3600,4200]  # 静态投资额变化序列  “元/kW”
 price = np.linspace(0.1, 0.4, 31)  # 电价序列  “元/度”
 
 for invest in investment:
@@ -89,4 +91,4 @@ for invest in investment:
 
     write_excel([pre_pro_irr,after_pro_irr,cap_irr], sheet_name=sheet_name, 
                 row_header=row_name, column_header=column_name,
-                file='光伏收益-' + str(invest) + '.xlsx')
+                file='青海-'+str(finance.loan_rate)+'-光伏收益-' + str(invest) + '.xlsx')

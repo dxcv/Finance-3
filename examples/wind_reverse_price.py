@@ -31,7 +31,7 @@ finance.other_ratio = 0.1  # 其它费用占静态投资比例系数
 finance.capital_ratio = 0.20  # 资本金比例
 finance.working_ratio = 0.30  # 流动资金资本金比例
 #finance.loan_rate = 0.046  # 贷款利率（长期）
-finance.loan_rate = 0.03  # 贷款利率（长期）
+finance.loan_rate = 0.035  # 贷款利率（长期）
 finance.working_rate = 0.0435  # 流动资金贷款利率
 finance.rate_discount = 1.0  # 长期贷款利率折扣（1为无）
 finance.vat_refund_rate =0.5  # 增值税退税比率
@@ -52,7 +52,7 @@ finance.cost_list = []  # 成本费辅助流量列表（万元）
 finance.cash_list = []  # 项目现金流量辅助列表（万元）
 finance.cap_list = []  # 资本金现金流量辅助列表（万元）
 
-pro_irr = 0.065  # 项目投资 IRR（税前） 标准
+pro_irr = 0.07  # 项目投资 IRR（税前） 标准
 cap_irr = 0.01  # 资本金 IRR（税后） 标准
     
 ## 电价临界面计算逻辑测试
@@ -73,4 +73,4 @@ row_name = [str(k) for k in aep]
 column_name = [str(k) for k in investment]
 
 write_excel(price, row_header=row_name, 
-            column_header=column_name,file='风电上网电价-项目-6.5%.xlsx')
+            column_header=column_name,file='风电上网电价-项目-7%-3.5%.xlsx')
